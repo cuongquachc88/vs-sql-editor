@@ -4,16 +4,15 @@ A VS Code extension to connect to and edit SQL across **PostgreSQL, MySQL, PGlit
 SQLite, and ClickHouse** — using VS Code's native editor as the SQL surface.
 
 > **Status:** Phase 1 (PostgreSQL: connect → run → paged results grid → CSV/JSON export).
-> Remaining engines and features land in later phases — see
-> [`docs/superpowers/plans/`](docs/superpowers/plans/).
+> Remaining engines and features land in later phases — see the plans under
+> `docs/superpowers/plans/`.
 
 ## Architecture
 
 The extension host (Node) owns all database connections behind a single
 `DatabaseDriver` interface; a sandboxed webview renders the results grid and talks to
 the host only via typed `postMessage`. See
-[`docs/superpowers/specs/2026-06-10-vs-sql-editor-design.md`](docs/superpowers/specs/2026-06-10-vs-sql-editor-design.md)
-for the full design.
+`docs/superpowers/specs/2026-06-10-vs-sql-editor-design.md` for the full design.
 
 ```
 src/

@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "publisher": "vs-sql-editor",
   "engines": { "vscode": "^1.90.0" },
+  "license": "MIT",
   "main": "./dist/extension.js",
   "activationEvents": ["onLanguage:sql"],
   "categories": ["Other"],
