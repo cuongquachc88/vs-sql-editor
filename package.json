@@ -4,16 +4,31 @@
   "description": "Connect to and edit SQL across Postgres, MySQL, PGlite, SQLite, ClickHouse",
   "version": "0.0.1",
   "publisher": "vs-sql-editor",
-  "engines": { "vscode": "^1.90.0" },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
   "license": "MIT",
   "main": "./dist/extension.js",
-  "activationEvents": ["onLanguage:sql"],
-  "categories": ["Other"],
+  "activationEvents": [
+    "onLanguage:sql"
+  ],
+  "categories": [
+    "Other"
+  ],
   "contributes": {
     "commands": [
-      { "command": "vsSqlEditor.addConnection", "title": "SQL: Add Connection" },
-      { "command": "vsSqlEditor.runQuery", "title": "SQL: Run Query" },
-      { "command": "vsSqlEditor.selectConnection", "title": "SQL: Select Active Connection" }
+      {
+        "command": "vsSqlEditor.addConnection",
+        "title": "SQL: Add Connection"
+      },
+      {
+        "command": "vsSqlEditor.runQuery",
+        "title": "SQL: Run Query"
+      },
+      {
+        "command": "vsSqlEditor.selectConnection",
+        "title": "SQL: Select Active Connection"
+      }
     ],
     "configuration": {
       "title": "VS SQL Editor",
@@ -33,12 +48,17 @@
     "vscode:prepublish": "node esbuild.mjs --production"
   },
   "dependencies": {
+    "@clickhouse/client": "^1.20.0",
+    "@electric-sql/pglite": "^0.2.17",
+    "csv-stringify": "^6.5.0",
+    "mysql2": "^3.22.5",
     "pg": "^8.13.0",
-    "csv-stringify": "^6.5.0"
+    "sql.js": "^1.14.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/pg": "^8.11.0",
+    "@types/sql.js": "^1.4.11",
     "@types/vscode": "^1.90.0",
     "esbuild": "^0.23.0",
     "typescript": "^5.5.0",

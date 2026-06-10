@@ -11,6 +11,10 @@ const host = {
   outfile: "dist/extension.js",
   platform: "node",
   format: "cjs",
+  // Keep node deps external so WASM-backed libs (pglite, sql.js) load from
+  // node_modules with their asset resolution intact, and the ESM-only pglite
+  // can be reached via a runtime dynamic import(). They ship inside the .vsix.
+  packages: "external",
   external: ["vscode"],
 };
 

@@ -5,3 +5,18 @@ services:
       POSTGRES_PASSWORD: test
       POSTGRES_DB: testdb
     ports: ["55432:5432"]
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_DATABASE: testdb
+    ports: ["53306:3306"]
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24
+    ports: ["58123:8123"]
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144

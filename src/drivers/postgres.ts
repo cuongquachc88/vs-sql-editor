@@ -1,4 +1,5 @@
 import { Client } from "pg";
+import { applySelectPaging } from "./paging";
 import {
   DriverError,
   type Capabilities,
@@ -49,7 +50,7 @@ export class PostgresDriver implements DatabaseDriver {
     const client = (session as PgSession).handle;
     const pageSize = opts.pageSize ?? 500;
     const page = opts.page ?? 0;
-    const paged = this.applyPaging(sql, page, pageSize);
+    const paged = applySelectPaging(sql, page, pageSize);
     try {
       const res = await client.query({ text: paged, rowMode: "array" });
       const columns = res.fields.map((f) => ({ name: f.name, type: String(f.dataTypeID) }));
@@ -65,14 +66,6 @@ export class PostgresDriver implements DatabaseDriver {
     } catch (err) {
       throw new DriverError("QUERY_FAILED", (err as Error).message, (err as Error).stack);
     }
-  }
-
-  // Wrap as a subquery so LIMIT/OFFSET works for arbitrary SELECTs. Non-SELECT
-  // statements (with no result set to page) are passed through unchanged.
-  private applyPaging(sql: string, page: number, pageSize: number): string {
-    const trimmed = sql.trim().replace(/;\s*$/, "");
-    if (!/^select|^with/i.test(trimmed)) return sql;
-    return `select * from (${trimmed}) as _q limit ${pageSize} offset ${page * pageSize}`;
   }
 
   async introspect(_session: Session): Promise<SchemaModel> {

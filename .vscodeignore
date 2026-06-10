@@ -1,8 +1,14 @@
-node_modules/**
 dist/**/*.map
 .claude/**
 .vscode/**
 .gitignore
+# Compile-time-only / dev artifacts that npm hoists into node_modules
+node_modules/@types/**
+node_modules/typescript/**
+node_modules/.bin/**
+**/*.ts
+**/*.map
+**/tsconfig*.json
 src/**
 test/**
 **/*.test.ts

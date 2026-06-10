@@ -3,8 +3,9 @@
 A VS Code extension to connect to and edit SQL across **PostgreSQL, MySQL, PGlite,
 SQLite, and ClickHouse** — using VS Code's native editor as the SQL surface.
 
-> **Status:** Phase 1 (PostgreSQL: connect → run → paged results grid → CSV/JSON export).
-> Remaining engines and features land in later phases — see the plans under
+> **Status:** Phases 1–2 done. All five engines (PostgreSQL, MySQL, SQLite, PGlite,
+> ClickHouse) can connect → run → page results → export CSV/JSON. Schema explorer,
+> autocomplete, and inline editing land in Phases 3–5 — see the plans under
 > `docs/superpowers/plans/`.
 
 ## Architecture
@@ -35,22 +36,30 @@ npm run watch        # rebuild on change
 
 Press **F5** in VS Code to launch the Extension Development Host.
 
-### Using it (Phase 1)
+### Using it
 
-1. **SQL: Add Connection** — enter Postgres host/port/db/user/password (password is stored
-   in VS Code SecretStorage, OS-keychain backed).
+1. **SQL: Add Connection** — pick an engine:
+   - **postgres / mysql / clickhouse:** host / port / database / user / password
+     (password stored in VS Code SecretStorage, OS-keychain backed).
+   - **sqlite:** path to a `.sqlite` file.
+   - **pglite:** optional data directory (blank = in-memory).
 2. Open a `.sql` file, write a query.
 3. Click **▶ Run Query** (CodeLens) or run **SQL: Run Query**.
 4. Results appear in a side panel: page with **Prev/Next**, export with **CSV/JSON**.
+   (ClickHouse is read-only/append-oriented, so inline editing — Phase 5 — will stay off
+   for it via the driver's `capabilities.editRows = false`.)
 
 ## Testing
 
-Unit tests run with no external services. The Postgres driver has an integration test
-gated on `TEST_PG_URL`; to run it:
+SQLite and PGlite run fully in-process (WASM), so their driver tests always run with
+`npm test` — no services needed. Postgres, MySQL, and ClickHouse have integration tests
+gated on env vars; to run them:
 
-```bash
+```powershell
 docker compose -f docker-compose.test.yml up -d
-$env:TEST_PG_URL="postgres://postgres:test@localhost:55432/testdb"   # PowerShell
+$env:TEST_PG_URL="postgres://postgres:test@localhost:55432/testdb"
+$env:TEST_MYSQL_URL="mysql://root:test@localhost:53306/testdb"
+$env:TEST_CLICKHOUSE_URL="http://default:@localhost:58123/default"
 npm test
 docker compose -f docker-compose.test.yml down
 ```

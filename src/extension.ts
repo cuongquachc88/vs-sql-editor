@@ -93,17 +93,51 @@ async function pickConnection(store: ConnectionStore): Promise<string | undefine
   return pick?.id;
 }
 
+const DEFAULT_PORT: Partial<Record<EngineId, number>> = {
+  postgres: 5432,
+  mysql: 3306,
+  clickhouse: 8123,
+};
+
 async function addConnection(store: ConnectionStore) {
   const name = await vscode.window.showInputBox({ prompt: "Connection name" });
   if (!name) return undefined;
-  const engine = (await vscode.window.showQuickPick(["postgres"], {
-    placeHolder: "Engine (Phase 1: postgres)",
-  })) as EngineId | undefined;
+  const engine = (await vscode.window.showQuickPick(
+    ["postgres", "mysql", "sqlite", "pglite", "clickhouse"],
+    { placeHolder: "Database engine" },
+  )) as EngineId | undefined;
   if (!engine) return undefined;
+
+  if (engine === "sqlite") {
+    const filePath = await vscode.window.showInputBox({
+      prompt: "SQLite database file path",
+      placeHolder: "C:\\path\\to\\database.sqlite",
+    });
+    if (!filePath) return undefined;
+    return store.add({ name, engine, filePath });
+  }
+
+  if (engine === "pglite") {
+    const filePath = await vscode.window.showInputBox({
+      prompt: "PGlite data directory (leave blank for in-memory)",
+      placeHolder: "C:\\path\\to\\pgdata (optional)",
+    });
+    return store.add({ name, engine, filePath: filePath || undefined });
+  }
+
+  // Network engines: postgres / mysql / clickhouse
   const host = await vscode.window.showInputBox({ prompt: "Host", value: "localhost" });
-  const port = Number(await vscode.window.showInputBox({ prompt: "Port", value: "5432" }));
+  const port = Number(
+    await vscode.window.showInputBox({
+      prompt: "Port",
+      value: String(DEFAULT_PORT[engine] ?? ""),
+    }),
+  );
   const database = await vscode.window.showInputBox({ prompt: "Database" });
   const user = await vscode.window.showInputBox({ prompt: "User" });
   const password = await vscode.window.showInputBox({ prompt: "Password", password: true });
-  return store.add({ name, engine, host, port, database, user }, password || undefined);
+  return store.add(
+    { name, engine, host, port: Number.isFinite(port) ? port : undefined, database, user },
+    password || undefined,
+  );
 }
