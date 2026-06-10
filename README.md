@@ -8,6 +8,29 @@ SQLite, and ClickHouse** — using VS Code's native editor as the SQL surface.
 > autocomplete, and inline editing land in Phases 3–5 — see the plans under
 > `docs/superpowers/plans/`.
 
+## Install
+
+**From a packaged `.vsix` (recommended):**
+
+1. Download `vs-sql-editor-<version>.vsix` from the
+   [GitHub Releases](https://github.com/cuongquachc88/vs-sql-editor/releases) page.
+2. Install it:
+   ```powershell
+   code --install-extension vs-sql-editor-0.0.1.vsix
+   ```
+   Or in VS Code: **Ctrl+Shift+P → Extensions: Install from VSIX…** and pick the file.
+3. Reload VS Code.
+
+**Build and install from source:**
+
+```powershell
+git clone https://github.com/cuongquachc88/vs-sql-editor.git
+cd vs-sql-editor
+npm install
+npx @vscode/vsce package
+code --install-extension vs-sql-editor-0.0.1.vsix
+```
+
 ## Architecture
 
 The extension host (Node) owns all database connections behind a single
@@ -66,20 +89,21 @@ docker compose -f docker-compose.test.yml down
 
 ## Development
 
-See `DEVELOPMENT.md` (bundled in this package and in the repo) for build, debug (F5),
-packaging, and how to add a new database engine.
+See [`DEVELOPMENT.md`](DEVELOPMENT.md) for build, debug (F5), packaging, and how to add a
+new database engine.
 
 ## Privacy
 
 VS SQL Editor collects **no data**, has **no telemetry**, and sends nothing to any
 third-party server. Connection profiles are stored locally and passwords are kept in VS
-Code's OS-keychain-backed SecretStorage. Full policy in `PRIVACY.md` (bundled in this
-package and in the repo).
+Code's OS-keychain-backed SecretStorage. Full details: [`PRIVACY.md`](PRIVACY.md).
 
 ## Support
 
-Questions, bugs, or feature requests: [cuongquachc88@gmail.com](mailto:cuongquachc88@gmail.com)
+Questions, bugs, or feature requests:
+[open an issue](https://github.com/cuongquachc88/vs-sql-editor/issues) or email
+[cuongquachc88@gmail.com](mailto:cuongquachc88@gmail.com).
 
 ## License
 
-MIT — see `LICENSE`.
+[MIT](LICENSE)

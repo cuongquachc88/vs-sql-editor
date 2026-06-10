@@ -3,13 +3,23 @@
   "displayName": "VS SQL Editor",
   "description": "Connect to and edit SQL across Postgres, MySQL, PGlite, SQLite, ClickHouse",
   "version": "0.0.1",
-  "publisher": "vs-sql-editor",
+  "publisher": "cuongquachc88",
+  "author": {
+    "name": "cuongquachc88",
+    "email": "cuongquachc88@gmail.com"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
   "license": "MIT",
   "qna": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cuongquachc88/vs-sql-editor.git"
+  },
+  "homepage": "https://github.com/cuongquachc88/vs-sql-editor#readme",
   "bugs": {
+    "url": "https://github.com/cuongquachc88/vs-sql-editor/issues",
     "email": "cuongquachc88@gmail.com"
   },
   "main": "./dist/extension.js",
