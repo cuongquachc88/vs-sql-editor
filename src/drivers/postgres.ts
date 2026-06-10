@@ -1,6 +1,7 @@
 import { Client } from "pg";
 import { applySelectPaging } from "./paging";
 import { introspectPostgresLike } from "./introspect-pg";
+import { buildUpdate, quoteDoubleQuote } from "../edit/sql";
 import {
   DriverError,
   type Capabilities,
@@ -83,8 +84,12 @@ export class PostgresDriver implements DatabaseDriver {
     }
   }
 
-  buildEditStatement(): string {
-    throw DriverError.notImplemented("buildEditStatement"); // Phase 5
+  buildEditStatement(
+    table: string,
+    pk: Record<string, unknown>,
+    changes: Record<string, unknown>,
+  ): string {
+    return buildUpdate(quoteDoubleQuote, table, pk, changes);
   }
 
   async cancel(session: Session): Promise<void> {

@@ -67,4 +67,15 @@ describe("PgliteDriver", () => {
     const view = publicSchema!.tables.find((t) => t.name === "person_v")!;
     expect(view.isView).toBe(true);
   });
+
+  it("buildEditStatement produces an UPDATE that actually applies", async () => {
+    session = await driver.connect({ id: "m", name: "mem", engine: "pglite" });
+    await driver.query(session, "create table person (id int primary key, name text)");
+    await driver.query(session, "insert into person values (1, 'Ada')");
+    const sql = driver.buildEditStatement('"public"."person"', { id: 1 }, { name: "Grace" });
+    expect(sql).toBe(`update "public"."person" set "name" = 'Grace' where "id" = 1`);
+    await driver.query(session, sql);
+    const rs = await driver.query(session, "select name from person where id = 1");
+    expect(rs.rows).toEqual([["Grace"]]);
+  });
 });

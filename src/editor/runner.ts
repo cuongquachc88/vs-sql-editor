@@ -3,6 +3,7 @@ import { toCsv } from "../export/csv";
 import { toJson } from "../export/json";
 import { DriverError, type ResultSet } from "../drivers/types";
 import type { ConnectionManager } from "../connections/manager";
+import type { EditMeta } from "../results/protocol";
 
 // Pure: choose the SQL to execute.
 export function resolveSql(documentText: string, selectedText: string): string {
@@ -15,11 +16,14 @@ export interface RunContext {
   profileId: string;
   pageSize: number;
   panel: ResultsPanel;
+  // When set, the result rows map to this table and the grid allows inline edits.
+  edit?: EditMeta;
 }
 
-// Runs `sql`, drives the panel, and wires paging + export for this result.
+// Runs `sql`, drives the panel, and wires paging + export + inline edit for this result.
 export async function runAndShow(ctx: RunContext, sql: string): Promise<void> {
-  const { manager, profileId, pageSize, panel } = ctx;
+  const { manager, profileId, pageSize, panel, edit } = ctx;
+  let currentPage = 0;
 
   const runPage = async (page: number): Promise<ResultSet | undefined> => {
     try {
@@ -27,7 +31,8 @@ export async function runAndShow(ctx: RunContext, sql: string): Promise<void> {
       const session = await manager.get(profileId);
       const driver = manager.driverOf(profileId)!;
       const rs = await driver.query(session, sql, { page, pageSize });
-      panel.post({ type: "result", data: rs });
+      currentPage = page;
+      panel.post({ type: "result", data: rs, edit });
       return rs;
     } catch (err) {
       const e = DriverError.from(err);
@@ -53,6 +58,38 @@ export async function runAndShow(ctx: RunContext, sql: string): Promise<void> {
         await workspace.fs.writeFile(target, Buffer.from(text, "utf8"));
         void window.showInformationMessage(`Exported to ${Uri.from(target).fsPath}`);
       }
+      return;
+    }
+    if (m.type === "applyEdit" && edit) {
+      const { window } = await import("vscode");
+      const driver = manager.driverOf(profileId);
+      if (!driver) return;
+      let statement: string;
+      try {
+        statement = driver.buildEditStatement(edit.table, m.pk, { [m.column]: m.value });
+      } catch (err) {
+        void window.showErrorMessage(`Cannot build update: ${(err as Error).message}`);
+        if (last) panel.post({ type: "result", data: last, edit }); // revert grid
+        return;
+      }
+      const choice = await window.showWarningMessage(
+        `Apply this change?\n\n${statement}`,
+        { modal: true },
+        "Run Update",
+      );
+      if (choice !== "Run Update") {
+        if (last) panel.post({ type: "result", data: last, edit }); // revert grid
+        return;
+      }
+      try {
+        const session = await manager.get(profileId);
+        await driver.query(session, statement);
+        void window.showInformationMessage("Row updated.");
+      } catch (err) {
+        const e = DriverError.from(err);
+        void window.showErrorMessage(`Update failed: ${e.message}`);
+      }
+      last = await runPage(currentPage); // refresh to show the committed value
     }
   });
 }

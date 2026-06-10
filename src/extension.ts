@@ -69,8 +69,24 @@ export function activate(context: vscode.ExtensionContext): void {
       const panel = ResultsPanel.show(context);
       activeProfileId = node.profileId;
       refreshStatus();
+
+      // Enable inline editing only if the engine supports it, the object is a real
+      // table (not a view), and we know its primary key from introspection.
+      let edit: { table: string; pkColumns: string[] } | undefined;
+      const driver = manager.driverOf(node.profileId);
+      const pk = node.isView
+        ? []
+        : (schemaCache
+            .peek(node.profileId)
+            ?.databases.find((d) => d.name === node.database)
+            ?.schemas.find((s) => s.name === node.schema)
+            ?.tables.find((t) => t.name === node.table)?.primaryKey ?? []);
+      if (driver?.capabilities.editRows && pk.length > 0) {
+        edit = { table: ref, pkColumns: pk };
+      }
+
       await runAndShow(
-        { manager, profileId: node.profileId, pageSize: previewPageSize(), panel },
+        { manager, profileId: node.profileId, pageSize: previewPageSize(), panel, edit },
         `select * from ${ref}`,
       );
     }),

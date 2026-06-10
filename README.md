@@ -3,10 +3,10 @@
 A VS Code extension to connect to and edit SQL across **PostgreSQL, MySQL, PGlite,
 SQLite, and ClickHouse** — using VS Code's native editor as the SQL surface.
 
-> **Status:** Phases 1–4 done. All five engines (PostgreSQL, MySQL, SQLite, PGlite,
+> **Status:** Phases 1–5 complete. All five engines (PostgreSQL, MySQL, SQLite, PGlite,
 > ClickHouse) can connect → run → page results → export CSV/JSON, with a schema explorer
-> tree and schema-aware autocomplete. Inline result editing lands in Phase 5 — see the
-> plans under `docs/superpowers/plans/`.
+> tree, schema-aware autocomplete, and inline result editing (where the engine and a
+> primary key allow it). See the plans under `docs/superpowers/plans/`.
 
 ## Install
 
@@ -72,8 +72,10 @@ Press **F5** in VS Code to launch the Extension Development Host.
    table to preview its data.
 3. Click **▶ Run Query** (CodeLens) or run **SQL: Run Query**.
 4. Results appear in a side panel: page with **Prev/Next**, export with **CSV/JSON**.
-   (ClickHouse is read-only/append-oriented, so inline editing — Phase 5 — will stay off
-   for it via the driver's `capabilities.editRows = false`.)
+5. **Inline editing:** when you preview a table (from the explorer) that has a primary key
+   on an editable engine, non-key cells become editable — edit a cell, click away, review
+   the generated `UPDATE`, and confirm to apply. ClickHouse is read-only/append-oriented,
+   so editing stays off for it via `capabilities.editRows = false`.
 
 ## Testing
 

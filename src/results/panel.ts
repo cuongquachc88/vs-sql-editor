@@ -56,8 +56,11 @@ export class ResultsPanel {
         table { border-collapse: collapse; width: 100%; }
         th, td { border: 1px solid var(--vscode-panel-border); padding: 2px 6px; text-align: left; }
         th { position: sticky; top: 0; background: var(--vscode-editor-background); }
-        #bar { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        #bar { display: flex; gap: 8px; margin-bottom: 4px; align-items: center; }
+        #hint { color: var(--vscode-descriptionForeground); font-size: 0.85em; margin-bottom: 6px; min-height: 1em; }
         .err { color: var(--vscode-errorForeground); white-space: pre-wrap; }
+        td.editable { outline: none; }
+        td.editable:focus { background: var(--vscode-list-activeSelectionBackground); }
         button { cursor: pointer; }
       </style></head>
       <body>
@@ -66,6 +69,7 @@ export class ResultsPanel {
           <span style="flex:1"></span>
           <button id="csv">Export CSV</button><button id="json">Export JSON</button>
         </div>
+        <div id="hint"></div>
         <div id="content"></div>
         <script nonce="${nonce}" src="${src}"></script>
       </body></html>`;

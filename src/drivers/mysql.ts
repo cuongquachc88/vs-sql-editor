@@ -1,5 +1,6 @@
 import { createConnection, type Connection, type FieldPacket } from "mysql2/promise";
 import { applySelectPaging } from "./paging";
+import { buildUpdate, quoteBacktick } from "../edit/sql";
 import {
   DriverError,
   type Capabilities,
@@ -125,8 +126,12 @@ export class MysqlDriver implements DatabaseDriver {
     }
   }
 
-  buildEditStatement(): string {
-    throw DriverError.notImplemented("buildEditStatement"); // Phase 5
+  buildEditStatement(
+    table: string,
+    pk: Record<string, unknown>,
+    changes: Record<string, unknown>,
+  ): string {
+    return buildUpdate(quoteBacktick, table, pk, changes);
   }
 
   async cancel(session: Session): Promise<void> {
