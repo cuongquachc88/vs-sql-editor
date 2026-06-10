@@ -2,6 +2,7 @@ node_modules/
 dist/
 *.vsix
 .DS_Store
+.claude/
 
 # Superpowers workflow artifacts (specs + plans)
 docs/superpowers/
