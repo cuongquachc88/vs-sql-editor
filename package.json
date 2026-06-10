@@ -8,6 +8,10 @@
     "vscode": "^1.90.0"
   },
   "license": "MIT",
+  "qna": false,
+  "bugs": {
+    "email": "cuongquachc88@gmail.com"
+  },
   "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:sql"

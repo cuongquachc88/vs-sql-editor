@@ -63,3 +63,23 @@ $env:TEST_CLICKHOUSE_URL="http://default:@localhost:58123/default"
 npm test
 docker compose -f docker-compose.test.yml down
 ```
+
+## Development
+
+See `DEVELOPMENT.md` (bundled in this package and in the repo) for build, debug (F5),
+packaging, and how to add a new database engine.
+
+## Privacy
+
+VS SQL Editor collects **no data**, has **no telemetry**, and sends nothing to any
+third-party server. Connection profiles are stored locally and passwords are kept in VS
+Code's OS-keychain-backed SecretStorage. Full policy in `PRIVACY.md` (bundled in this
+package and in the repo).
+
+## Support
+
+Questions, bugs, or feature requests: [cuongquachc88@gmail.com](mailto:cuongquachc88@gmail.com)
+
+## License
+
+MIT — see `LICENSE`.
