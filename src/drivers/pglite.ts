@@ -1,4 +1,5 @@
 import { applySelectPaging } from "./paging";
+import { introspectPostgresLike } from "./introspect-pg";
 import {
   DriverError,
   type Capabilities,
@@ -69,8 +70,19 @@ export class PgliteDriver implements DatabaseDriver {
     }
   }
 
-  async introspect(_session: Session): Promise<SchemaModel> {
-    throw DriverError.notImplemented("introspect"); // Phase 3
+  async introspect(session: Session): Promise<SchemaModel> {
+    const db = (session as PgliteSession).handle;
+    try {
+      // No rowMode => rows come back as plain objects.
+      const dbRes = await db.query("select current_database() as db");
+      const databaseName = (dbRes.rows[0] as { db: string }).db;
+      return await introspectPostgresLike(
+        async (sql) => (await db.query(sql)).rows as Record<string, unknown>[],
+        databaseName,
+      );
+    } catch (err) {
+      throw new DriverError("QUERY_FAILED", (err as Error).message, (err as Error).stack);
+    }
   }
 
   buildEditStatement(): string {

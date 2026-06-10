@@ -25,6 +25,35 @@ export class SecretStorage {
   }
 }
 
+export class EventEmitter<T> {
+  private listeners: ((e: T) => void)[] = [];
+  event = (listener: (e: T) => void) => {
+    this.listeners.push(listener);
+    return { dispose: () => undefined };
+  };
+  fire(data: T): void {
+    for (const l of this.listeners) l(data);
+  }
+  dispose(): void {}
+}
+
+export const TreeItemCollapsibleState = { None: 0, Collapsed: 1, Expanded: 2 };
+
+export class TreeItem {
+  iconPath?: unknown;
+  description?: string;
+  contextValue?: string;
+  command?: unknown;
+  constructor(
+    public label: string,
+    public collapsibleState?: number,
+  ) {}
+}
+
+export class ThemeIcon {
+  constructor(public id: string) {}
+}
+
 export const window = {
   showInformationMessage: async () => undefined,
   showErrorMessage: async () => undefined,

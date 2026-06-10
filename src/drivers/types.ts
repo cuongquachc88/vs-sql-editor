@@ -45,15 +45,25 @@ export interface QueryOptions {
   signal?: AbortSignal;
 }
 
-// Reserved for Phase 3.
+export interface TableInfo {
+  name: string;
+  isView: boolean;
+  columns: ColumnMeta[];
+  primaryKey: string[];
+}
+
+export interface SchemaInfo {
+  name: string;
+  tables: TableInfo[];
+}
+
+export interface DatabaseInfo {
+  name: string;
+  schemas: SchemaInfo[];
+}
+
 export interface SchemaModel {
-  databases: {
-    name: string;
-    schemas: {
-      name: string;
-      tables: { name: string; columns: ColumnMeta[]; primaryKey: string[] }[];
-    }[];
-  }[];
+  databases: DatabaseInfo[];
 }
 
 export type DriverErrorCode =

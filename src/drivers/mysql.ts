@@ -9,6 +9,7 @@ import {
   type ResultSet,
   type SchemaModel,
   type Session,
+  type TableInfo,
 } from "./types";
 
 interface MysqlSession extends Session {
@@ -68,8 +69,60 @@ export class MysqlDriver implements DatabaseDriver {
     }
   }
 
-  async introspect(_session: Session): Promise<SchemaModel> {
-    throw DriverError.notImplemented("introspect"); // Phase 3
+  async introspect(session: Session): Promise<SchemaModel> {
+    const conn = (session as MysqlSession).handle;
+    try {
+      const [dbRows] = await conn.query("select database() as db");
+      const databaseName = (dbRows as { db: string | null }[])[0]?.db;
+      if (!databaseName) {
+        // No database selected on the connection; nothing to introspect.
+        return { databases: [] };
+      }
+      const [colRows] = await conn.query(
+        `select c.table_name as t, c.column_name as col, c.data_type as dt, t.table_type as tt
+         from information_schema.columns c
+         join information_schema.tables t
+           on t.table_schema = c.table_schema and t.table_name = c.table_name
+         where c.table_schema = ?
+         order by c.table_name, c.ordinal_position`,
+        [databaseName],
+      );
+      const [pkRows] = await conn.query(
+        `select table_name as t, column_name as col
+         from information_schema.key_column_usage
+         where table_schema = ? and constraint_name = 'PRIMARY'`,
+        [databaseName],
+      );
+
+      const pkByTable = new Map<string, string[]>();
+      for (const r of pkRows as { t: string; col: string }[]) {
+        const list = pkByTable.get(r.t) ?? [];
+        list.push(r.col);
+        pkByTable.set(r.t, list);
+      }
+
+      const tableMap = new Map<string, TableInfo>();
+      for (const r of colRows as { t: string; col: string; dt: string; tt: string }[]) {
+        const table =
+          tableMap.get(r.t) ??
+          ({
+            name: r.t,
+            isView: /view/i.test(r.tt),
+            columns: [],
+            primaryKey: pkByTable.get(r.t) ?? [],
+          } satisfies TableInfo);
+        tableMap.set(r.t, table);
+        table.columns.push({ name: r.col, type: r.dt });
+      }
+
+      return {
+        databases: [
+          { name: databaseName, schemas: [{ name: databaseName, tables: [...tableMap.values()] }] },
+        ],
+      };
+    } catch (err) {
+      throw new DriverError("QUERY_FAILED", (err as Error).message, (err as Error).stack);
+    }
   }
 
   buildEditStatement(): string {

@@ -4,12 +4,14 @@ import { applySelectPaging } from "./paging";
 import {
   DriverError,
   type Capabilities,
+  type ColumnMeta,
   type ConnectionProfile,
   type DatabaseDriver,
   type QueryOptions,
   type ResultSet,
   type SchemaModel,
   type Session,
+  type TableInfo,
 } from "./types";
 
 interface SqliteSession extends Session {
@@ -62,8 +64,33 @@ export class SqliteDriver implements DatabaseDriver {
     }
   }
 
-  async introspect(_session: Session): Promise<SchemaModel> {
-    throw DriverError.notImplemented("introspect"); // Phase 3
+  async introspect(session: Session): Promise<SchemaModel> {
+    const db = (session as SqliteSession).handle;
+    try {
+      const objs = db.exec(
+        "select name, type from sqlite_master where type in ('table','view') and name not like 'sqlite_%' order by name",
+      );
+      const tables: TableInfo[] = [];
+      if (objs.length > 0) {
+        for (const [name, type] of objs[0].values as [string, string][]) {
+          const info = db.exec(`pragma table_info("${name.replace(/"/g, '""')}")`);
+          const columns: ColumnMeta[] = [];
+          const primaryKey: string[] = [];
+          if (info.length > 0) {
+            // pragma table_info columns: cid, name, type, notnull, dflt_value, pk
+            for (const row of info[0].values) {
+              const colName = String(row[1]);
+              columns.push({ name: colName, type: String(row[2] ?? "") });
+              if (Number(row[5]) > 0) primaryKey.push(colName);
+            }
+          }
+          tables.push({ name, isView: type === "view", columns, primaryKey });
+        }
+      }
+      return { databases: [{ name: "main", schemas: [{ name: "main", tables }] }] };
+    } catch (err) {
+      throw new DriverError("QUERY_FAILED", (err as Error).message, (err as Error).stack);
+    }
   }
 
   buildEditStatement(): string {

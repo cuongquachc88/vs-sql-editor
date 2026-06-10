@@ -5,6 +5,7 @@ import { ConnectionStore } from "./connections/store";
 import { ConnectionManager } from "./connections/manager";
 import { ResultsPanel } from "./results/panel";
 import { resolveSql, runAndShow } from "./editor/runner";
+import { SchemaExplorerProvider, qualifyTable, type TreeNode } from "./explorer/tree";
 import type { EngineId } from "./drivers/types";
 
 let activeProfileId: string | undefined;
@@ -28,9 +29,40 @@ export function activate(context: vscode.ExtensionContext): void {
   };
   refreshStatus();
 
+  const explorer = new SchemaExplorerProvider(
+    () => store.list().map((p) => ({ id: p.id, name: p.name, engine: p.engine })),
+    async (profileId) => {
+      const session = await manager.get(profileId);
+      const driver = manager.driverOf(profileId)!;
+      return driver.introspect(session);
+    },
+  );
+  const treeView = vscode.window.createTreeView("vsSqlEditorExplorer", {
+    treeDataProvider: explorer,
+  });
+
+  const previewPageSize = () =>
+    vscode.workspace.getConfiguration("vsSqlEditor").get<number>("pageSize", 500);
+
   context.subscriptions.push(
     status,
-    vscode.commands.registerCommand("vsSqlEditor.addConnection", () => addConnection(store)),
+    treeView,
+    vscode.commands.registerCommand("vsSqlEditor.addConnection", async () => {
+      const profile = await addConnection(store);
+      if (profile) explorer.refresh();
+    }),
+    vscode.commands.registerCommand("vsSqlEditor.refreshExplorer", () => explorer.refresh()),
+    vscode.commands.registerCommand("vsSqlEditor.previewTable", async (node: TreeNode) => {
+      if (!node || node.kind !== "table") return;
+      const ref = qualifyTable(node.engine, node.schema, node.table);
+      const panel = ResultsPanel.show(context);
+      activeProfileId = node.profileId;
+      refreshStatus();
+      await runAndShow(
+        { manager, profileId: node.profileId, pageSize: previewPageSize(), panel },
+        `select * from ${ref}`,
+      );
+    }),
     vscode.commands.registerCommand("vsSqlEditor.selectConnection", async () => {
       activeProfileId = await pickConnection(store);
       refreshStatus();

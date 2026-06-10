@@ -24,7 +24,8 @@
   },
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onLanguage:sql"
+    "onLanguage:sql",
+    "onView:vsSqlEditorExplorer"
   ],
   "categories": [
     "Other"
@@ -33,7 +34,8 @@
     "commands": [
       {
         "command": "vsSqlEditor.addConnection",
-        "title": "SQL: Add Connection"
+        "title": "SQL: Add Connection",
+        "icon": "$(add)"
       },
       {
         "command": "vsSqlEditor.runQuery",
@@ -42,8 +44,55 @@
       {
         "command": "vsSqlEditor.selectConnection",
         "title": "SQL: Select Active Connection"
+      },
+      {
+        "command": "vsSqlEditor.refreshExplorer",
+        "title": "SQL: Refresh Schema Explorer",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "vsSqlEditor.previewTable",
+        "title": "SQL: Preview Table Data"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vsSqlEditor",
+          "title": "SQL Editor",
+          "icon": "$(database)"
+        }
+      ]
+    },
+    "views": {
+      "vsSqlEditor": [
+        {
+          "id": "vsSqlEditorExplorer",
+          "name": "Connections",
+          "icon": "$(database)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "vsSqlEditorExplorer",
+        "contents": "No SQL connections yet.\n[Add Connection](command:vsSqlEditor.addConnection)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "vsSqlEditor.addConnection",
+          "when": "view == vsSqlEditorExplorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vsSqlEditor.refreshExplorer",
+          "when": "view == vsSqlEditorExplorer",
+          "group": "navigation@2"
+        }
+      ]
+    },
     "configuration": {
       "title": "VS SQL Editor",
       "properties": {

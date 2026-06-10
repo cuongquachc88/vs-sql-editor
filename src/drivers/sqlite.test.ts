@@ -43,4 +43,17 @@ describe("SqliteDriver", () => {
       code: "QUERY_FAILED",
     });
   });
+
+  it("introspects tables, columns and primary keys", async () => {
+    session = await driver.connect({ id: "m", name: "mem", engine: "sqlite" });
+    await driver.query(session, "create table person (id integer primary key, name text)");
+    await driver.query(session, "create view person_v as select id from person");
+    const model = await driver.introspect(session);
+    const main = model.databases[0].schemas[0];
+    expect(main.name).toBe("main");
+    const person = main.tables.find((t) => t.name === "person")!;
+    expect(person.columns.map((c) => c.name)).toEqual(["id", "name"]);
+    expect(person.primaryKey).toEqual(["id"]);
+    expect(main.tables.find((t) => t.name === "person_v")!.isView).toBe(true);
+  });
 });

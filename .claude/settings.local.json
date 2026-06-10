@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp add:*)",
+      "Bash(claude plugin install:*)",
+      "Bash(claude plugin list:*)",
+      "Bash(claude plugin search:*)",
+      "Bash(claude plugin marketplace)",
+      "Bash(claude plugin marketplace:*)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

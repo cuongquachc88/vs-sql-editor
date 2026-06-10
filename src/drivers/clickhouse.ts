@@ -9,6 +9,7 @@ import {
   type ResultSet,
   type SchemaModel,
   type Session,
+  type TableInfo,
 } from "./types";
 
 interface ClickhouseSession extends Session {
@@ -72,8 +73,49 @@ export class ClickhouseDriver implements DatabaseDriver {
     }
   }
 
-  async introspect(_session: Session): Promise<SchemaModel> {
-    throw DriverError.notImplemented("introspect"); // Phase 3
+  async introspect(session: Session): Promise<SchemaModel> {
+    const client = (session as ClickhouseSession).handle;
+    try {
+      const dbRes = await client.query({ query: "select currentDatabase() as db", format: "JSON" });
+      const dbJson = (await dbRes.json()) as { data: { db: string }[] };
+      const databaseName = dbJson.data[0]?.db ?? "default";
+
+      const colRes = await client.query({
+        query: `select c.table as t, c.name as col, c.type as dt,
+                       t.engine as engine
+                from system.columns c
+                join system.tables t on t.database = c.database and t.name = c.table
+                where c.database = {db:String}
+                order by c.table, c.position`,
+        query_params: { db: databaseName },
+        format: "JSON",
+      });
+      const colJson = (await colRes.json()) as {
+        data: { t: string; col: string; dt: string; engine: string }[];
+      };
+
+      const tableMap = new Map<string, TableInfo>();
+      for (const r of colJson.data) {
+        const table =
+          tableMap.get(r.t) ??
+          ({
+            name: r.t,
+            isView: /view/i.test(r.engine),
+            columns: [],
+            primaryKey: [],
+          } satisfies TableInfo);
+        tableMap.set(r.t, table);
+        table.columns.push({ name: r.col, type: r.dt });
+      }
+
+      return {
+        databases: [
+          { name: databaseName, schemas: [{ name: databaseName, tables: [...tableMap.values()] }] },
+        ],
+      };
+    } catch (err) {
+      throw new DriverError("QUERY_FAILED", (err as Error).message, (err as Error).stack);
+    }
   }
 
   buildEditStatement(): string {

@@ -52,4 +52,19 @@ describe("PgliteDriver", () => {
     const rs = await driver.query(session, "select id from t order by id");
     expect(rs.rows).toEqual([[7], [8]]);
   });
+
+  it("introspects schemas, tables, columns and primary keys", async () => {
+    session = await driver.connect({ id: "m", name: "mem", engine: "pglite" });
+    await driver.query(session, "create table person (id int primary key, name text)");
+    await driver.query(session, "create view person_v as select id from person");
+    const model = await driver.introspect(session);
+    const publicSchema = model.databases[0].schemas.find((s) => s.name === "public");
+    expect(publicSchema).toBeDefined();
+    const person = publicSchema!.tables.find((t) => t.name === "person")!;
+    expect(person.columns.map((c) => c.name)).toEqual(["id", "name"]);
+    expect(person.primaryKey).toEqual(["id"]);
+    expect(person.isView).toBe(false);
+    const view = publicSchema!.tables.find((t) => t.name === "person_v")!;
+    expect(view.isView).toBe(true);
+  });
 });
