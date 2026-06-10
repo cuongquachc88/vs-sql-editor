@@ -1,0 +1,8 @@
+src/**
+test/**
+**/*.test.ts
+esbuild.mjs
+vitest.config.ts
+tsconfig.json
+docs/**
+docker-compose.test.yml
