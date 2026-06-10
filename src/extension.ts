@@ -5,6 +5,8 @@ import { ConnectionStore } from "./connections/store";
 import { ConnectionManager } from "./connections/manager";
 import { ResultsPanel } from "./results/panel";
 import { resolveSql, runAndShow } from "./editor/runner";
+import { createSqlCompletionProvider } from "./editor/completion";
+import { SchemaCache } from "./connections/schema-cache";
 import { SchemaExplorerProvider, qualifyTable, type TreeNode } from "./explorer/tree";
 import type { EngineId } from "./drivers/types";
 
@@ -29,17 +31,25 @@ export function activate(context: vscode.ExtensionContext): void {
   };
   refreshStatus();
 
+  const schemaCache = new SchemaCache(async (profileId) => {
+    const session = await manager.get(profileId);
+    const driver = manager.driverOf(profileId)!;
+    return driver.introspect(session);
+  });
+
   const explorer = new SchemaExplorerProvider(
     () => store.list().map((p) => ({ id: p.id, name: p.name, engine: p.engine })),
-    async (profileId) => {
-      const session = await manager.get(profileId);
-      const driver = manager.driverOf(profileId)!;
-      return driver.introspect(session);
-    },
+    schemaCache,
   );
   const treeView = vscode.window.createTreeView("vsSqlEditorExplorer", {
     treeDataProvider: explorer,
   });
+
+  const completionProvider = vscode.languages.registerCompletionItemProvider(
+    { language: "sql" },
+    createSqlCompletionProvider(() => activeProfileId, schemaCache),
+    ".", " ",
+  );
 
   const previewPageSize = () =>
     vscode.workspace.getConfiguration("vsSqlEditor").get<number>("pageSize", 500);
@@ -47,6 +57,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     status,
     treeView,
+    completionProvider,
     vscode.commands.registerCommand("vsSqlEditor.addConnection", async () => {
       const profile = await addConnection(store);
       if (profile) explorer.refresh();

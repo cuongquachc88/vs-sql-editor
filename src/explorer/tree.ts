@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import type { SchemaCache } from "../connections/schema-cache";
 import type { EngineId, SchemaModel } from "../drivers/types";
 
 export type TreeNode =
@@ -28,15 +29,13 @@ export class SchemaExplorerProvider implements vscode.TreeDataProvider<TreeNode>
   private readonly _onDidChange = new vscode.EventEmitter<TreeNode | undefined>();
   readonly onDidChangeTreeData = this._onDidChange.event;
 
-  private readonly cache = new Map<string, SchemaModel>();
-
   constructor(
     private readonly listConnections: () => ConnectionSummary[],
-    private readonly introspect: (profileId: string) => Promise<SchemaModel>,
+    private readonly schemaCache: SchemaCache,
   ) {}
 
   refresh(): void {
-    this.cache.clear();
+    this.schemaCache.invalidate();
     this._onDidChange.fire(undefined);
   }
 
@@ -104,7 +103,7 @@ export class SchemaExplorerProvider implements vscode.TreeDataProvider<TreeNode>
     }
 
     if (node.kind === "database") {
-      const model = this.cache.get(node.profileId);
+      const model = this.schemaCache.peek(node.profileId);
       const db = model?.databases.find((d) => d.name === node.database);
       return (db?.schemas ?? []).map((s) => ({
         kind: "schema",
@@ -116,7 +115,7 @@ export class SchemaExplorerProvider implements vscode.TreeDataProvider<TreeNode>
     }
 
     if (node.kind === "schema") {
-      const model = this.cache.get(node.profileId);
+      const model = this.schemaCache.peek(node.profileId);
       const schema = model?.databases
         .find((d) => d.name === node.database)
         ?.schemas.find((s) => s.name === node.schema);
@@ -132,7 +131,7 @@ export class SchemaExplorerProvider implements vscode.TreeDataProvider<TreeNode>
     }
 
     if (node.kind === "table") {
-      const model = this.cache.get(node.profileId);
+      const model = this.schemaCache.peek(node.profileId);
       const table = model?.databases
         .find((d) => d.name === node.database)
         ?.schemas.find((s) => s.name === node.schema)
@@ -148,16 +147,10 @@ export class SchemaExplorerProvider implements vscode.TreeDataProvider<TreeNode>
   }
 
   private async getModel(profileId: string): Promise<SchemaModel | undefined> {
-    const cached = this.cache.get(profileId);
-    if (cached) return cached;
     try {
-      const model = await this.introspect(profileId);
-      this.cache.set(profileId, model);
-      return model;
+      return await this.schemaCache.get(profileId);
     } catch (err) {
-      void vscode.window.showErrorMessage(
-        `Failed to load schema: ${(err as Error).message}`,
-      );
+      void vscode.window.showErrorMessage(`Failed to load schema: ${(err as Error).message}`);
       return undefined;
     }
   }

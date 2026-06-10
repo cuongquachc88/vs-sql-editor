@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { SchemaExplorerProvider, qualifyTable, type TreeNode } from "./tree";
+import { SchemaCache } from "../connections/schema-cache";
 import type { SchemaModel } from "../drivers/types";
 
 const MODEL: SchemaModel = {
@@ -29,7 +30,7 @@ const MODEL: SchemaModel = {
 function makeProvider() {
   return new SchemaExplorerProvider(
     () => [{ id: "p1", name: "Local", engine: "postgres" }],
-    async () => MODEL,
+    new SchemaCache(async () => MODEL),
   );
 }
 
