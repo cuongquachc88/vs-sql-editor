@@ -108,6 +108,10 @@
     "build": "node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package",
+    "install:vsix": "code --install-extension vs-sql-editor-0.0.1.vsix --force",
+    "deploy": "npm run package && npm run install:vsix",
     "vscode:prepublish": "node esbuild.mjs --production"
   },
   "dependencies": {
@@ -123,6 +127,7 @@
     "@types/pg": "^8.11.0",
     "@types/sql.js": "^1.4.11",
     "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.0.0",
     "esbuild": "^0.23.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
