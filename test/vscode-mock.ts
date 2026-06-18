@@ -54,6 +54,25 @@ export class ThemeIcon {
   constructor(public id: string) {}
 }
 
+// Minimal Notebook API stubs — just enough for the serializer unit tests.
+export const NotebookCellKind = { Markup: 1, Code: 2 } as const;
+
+export class NotebookCellData {
+  outputs?: unknown[];
+  metadata?: unknown;
+  executionSummary?: unknown;
+  constructor(
+    public kind: number,
+    public value: string,
+    public languageId: string,
+  ) {}
+}
+
+export class NotebookData {
+  metadata?: unknown;
+  constructor(public cells: NotebookCellData[]) {}
+}
+
 export const window = {
   showInformationMessage: async () => undefined,
   showErrorMessage: async () => undefined,

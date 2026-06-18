@@ -25,7 +25,8 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:sql",
-    "onView:vsSqlEditorExplorer"
+    "onView:vsSqlEditorConnections",
+    "onNotebook:vsSqlEditor.notebook"
   ],
   "categories": [
     "Other"
@@ -39,7 +40,18 @@
       },
       {
         "command": "vsSqlEditor.runQuery",
-        "title": "SQL: Run Query"
+        "title": "SQL: Run Query",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "vsSqlEditor.runAll",
+        "title": "SQL: Run All",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "vsSqlEditor.runSelected",
+        "title": "SQL: Run Selection",
+        "icon": "$(run-below)"
       },
       {
         "command": "vsSqlEditor.selectConnection",
@@ -53,6 +65,64 @@
       {
         "command": "vsSqlEditor.previewTable",
         "title": "SQL: Preview Table Data"
+      },
+      {
+        "command": "vsSqlEditor.setActiveConnection",
+        "title": "SQL: Set Active Connection",
+        "icon": "$(check)"
+      },
+      {
+        "command": "vsSqlEditor.editConnection",
+        "title": "SQL: Edit Connection",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "vsSqlEditor.duplicateConnection",
+        "title": "SQL: Duplicate Connection",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "vsSqlEditor.deleteConnection",
+        "title": "SQL: Delete Connection",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "vsSqlEditor.welcome",
+        "title": "SQL: Open Welcome",
+        "icon": "$(home)"
+      },
+      {
+        "command": "vsSqlEditor.newQuery",
+        "title": "SQL: New Query",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "vsSqlEditor.openErd",
+        "title": "SQL: Open ERD Diagram",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "vsSqlEditor.importCsv",
+        "title": "SQL: Import CSV",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "vsSqlEditor.aiAskSql",
+        "title": "SQL: AI — Ask in plain English",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "vsSqlEditor.aiExplain",
+        "title": "SQL: AI — Explain Query",
+        "icon": "$(book)"
+      },
+      {
+        "command": "vsSqlEditor.aiSuggestFix",
+        "title": "SQL: AI — Suggest Fix for Last Error"
+      },
+      {
+        "command": "vsSqlEditor.aiSetOpenAiKey",
+        "title": "SQL: AI — Set OpenAI API Key"
       }
     ],
     "viewsContainers": {
@@ -67,32 +137,126 @@
     "views": {
       "vsSqlEditor": [
         {
-          "id": "vsSqlEditorExplorer",
+          "id": "vsSqlEditorConnections",
           "name": "Connections",
+          "type": "webview",
           "icon": "$(database)"
         }
       ]
     },
-    "viewsWelcome": [
-      {
-        "view": "vsSqlEditorExplorer",
-        "contents": "No SQL connections yet.\n[Add Connection](command:vsSqlEditor.addConnection)"
-      }
-    ],
     "menus": {
-      "view/title": [
+      "editor/title": [
         {
-          "command": "vsSqlEditor.addConnection",
-          "when": "view == vsSqlEditorExplorer",
+          "command": "vsSqlEditor.runAll",
+          "when": "resourceLangId == sql",
+          "group": "navigation@0"
+        },
+        {
+          "command": "vsSqlEditor.runSelected",
+          "when": "resourceLangId == sql",
           "group": "navigation@1"
         },
         {
-          "command": "vsSqlEditor.refreshExplorer",
-          "when": "view == vsSqlEditorExplorer",
+          "command": "vsSqlEditor.aiAskSql",
+          "when": "resourceLangId == sql",
           "group": "navigation@2"
+        },
+        {
+          "command": "vsSqlEditor.aiExplain",
+          "when": "resourceLangId == sql",
+          "group": "navigation@3"
+        },
+        {
+          "command": "vsSqlEditor.newQuery",
+          "when": "resourceLangId == sql",
+          "group": "navigation@4"
         }
+      ],
+      "editor/context": [
+        {
+          "command": "vsSqlEditor.runAll",
+          "when": "resourceLangId == sql",
+          "group": "1_sql@1"
+        },
+        {
+          "command": "vsSqlEditor.runSelected",
+          "when": "resourceLangId == sql && editorHasSelection",
+          "group": "1_sql@2"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "vsSqlEditor.newQuery",
+          "when": "view == vsSqlEditorConnections",
+          "group": "navigation@0"
+        },
+        {
+          "command": "vsSqlEditor.welcome",
+          "when": "view == vsSqlEditorConnections",
+          "group": "navigation@1"
+        },
+        {
+          "command": "vsSqlEditor.openErd",
+          "when": "view == vsSqlEditorConnections",
+          "group": "navigation@2"
+        },
+        {
+          "command": "vsSqlEditor.importCsv",
+          "when": "view == vsSqlEditorConnections",
+          "group": "navigation@3"
+        },
+        {
+          "command": "vsSqlEditor.addConnection",
+          "when": "view == vsSqlEditorConnections",
+          "group": "navigation@4"
+        },
+        {
+          "command": "vsSqlEditor.refreshExplorer",
+          "when": "view == vsSqlEditorConnections",
+          "group": "navigation@5"
+        }
+      ],
+      "commandPalette": [
+        { "command": "vsSqlEditor.editConnection", "when": "false" },
+        { "command": "vsSqlEditor.duplicateConnection", "when": "false" },
+        { "command": "vsSqlEditor.deleteConnection", "when": "false" },
+        { "command": "vsSqlEditor.setActiveConnection", "when": "false" },
+        { "command": "vsSqlEditor.previewTable", "when": "false" }
       ]
     },
+    "notebooks": [
+      {
+        "type": "vsSqlEditor.notebook",
+        "displayName": "SQL Notebook",
+        "selector": [
+          { "filenamePattern": "*.sqlnb" }
+        ]
+      }
+    ],
+    "notebookRenderer": [
+      {
+        "id": "vsSqlEditor.resultRenderer",
+        "displayName": "SQL Result Grid",
+        "entrypoint": "./dist/sqlnb-renderer.js",
+        "mimeTypes": [
+          "application/x-vssqleditor-result+json",
+          "application/x-vssqleditor-error+json"
+        ]
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "vsSqlEditor.runQuery",
+        "key": "f5",
+        "when": "editorTextFocus && resourceLangId == sql"
+      },
+      {
+        "command": "vsSqlEditor.runQuery",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && resourceLangId == sql"
+      }
+    ],
     "configuration": {
       "title": "VS SQL Editor",
       "properties": {
@@ -100,6 +264,27 @@
           "type": "number",
           "default": 500,
           "description": "Rows per results page"
+        },
+        "vsSqlEditor.ai.provider": {
+          "type": "string",
+          "enum": ["auto", "vscode-lm", "openai"],
+          "default": "auto",
+          "description": "Which language-model backend to use. \"auto\" prefers VS Code's Language Model API (e.g. Copilot) and falls back to OpenAI when an API key is configured."
+        },
+        "vsSqlEditor.ai.openai.baseUrl": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "Base URL for the OpenAI-compatible HTTP endpoint."
+        },
+        "vsSqlEditor.ai.openai.model": {
+          "type": "string",
+          "default": "gpt-4o-mini",
+          "description": "Model name for the OpenAI-compatible endpoint."
+        },
+        "vsSqlEditor.ai.inline.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable schema-aware AI ghost completions in SQL files."
         }
       }
     }
