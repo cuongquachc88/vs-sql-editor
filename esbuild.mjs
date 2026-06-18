@@ -26,11 +26,68 @@ const web = {
   format: "iife",
 };
 
+const form = {
+  ...common,
+  entryPoints: ["src/connections/form/webview/main.ts"],
+  outfile: "dist/connection-form.js",
+  platform: "browser",
+  format: "iife",
+};
+
+const sidebar = {
+  ...common,
+  entryPoints: ["src/connections/sidebar/webview/main.ts"],
+  outfile: "dist/connections-sidebar.js",
+  platform: "browser",
+  format: "iife",
+};
+
+const welcome = {
+  ...common,
+  entryPoints: ["src/welcome/webview/main.ts"],
+  outfile: "dist/welcome.js",
+  platform: "browser",
+  format: "iife",
+};
+
+const erd = {
+  ...common,
+  entryPoints: ["src/erd/webview/main.ts"],
+  outfile: "dist/erd.js",
+  platform: "browser",
+  format: "iife",
+};
+
+const importView = {
+  ...common,
+  entryPoints: ["src/import/webview/main.ts"],
+  outfile: "dist/import.js",
+  platform: "browser",
+  format: "iife",
+};
+
+// Notebook output renderer — must be an ES module that exports `activate`.
+const notebookRenderer = {
+  ...common,
+  entryPoints: ["src/notebook/renderer/main.ts"],
+  outfile: "dist/sqlnb-renderer.js",
+  platform: "browser",
+  format: "esm",
+};
+
+const tableDesigner = {
+  ...common,
+  entryPoints: ["src/table-designer/webview/main.ts"],
+  outfile: "dist/table-designer.js",
+  platform: "browser",
+  format: "iife",
+};
+
+const all = [host, web, form, sidebar, welcome, erd, importView, notebookRenderer, tableDesigner];
+
 if (watch) {
-  const c1 = await esbuild.context(host);
-  const c2 = await esbuild.context(web);
-  await Promise.all([c1.watch(), c2.watch()]);
+  const ctxs = await Promise.all(all.map((c) => esbuild.context(c)));
+  await Promise.all(ctxs.map((c) => c.watch()));
 } else {
-  await esbuild.build(host);
-  await esbuild.build(web);
+  for (const c of all) await esbuild.build(c);
 }
