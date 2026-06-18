@@ -33,6 +33,14 @@ export class ConnectionManager {
     return this.live.get(profileId)?.driver;
   }
 
+  hasSession(profileId: string): boolean {
+    return this.live.has(profileId);
+  }
+
+  liveProfileIds(): string[] {
+    return [...this.live.keys()];
+  }
+
   async disconnect(profileId: string): Promise<void> {
     const l = this.live.get(profileId);
     if (!l) return;

@@ -26,4 +26,41 @@ describe("ConnectionStore", () => {
     expect(store.list()).toHaveLength(0);
     expect(await store.getSecret(p.id)).toBeUndefined();
   });
+
+  it("updates fields without touching the secret when secret arg is omitted", async () => {
+    const store = makeStore();
+    const p = await store.add({ name: "a", engine: "postgres", host: "h1" }, "pw");
+    const updated = await store.update(p.id, { name: "b", host: "h2" });
+    expect(updated.name).toBe("b");
+    expect(updated.host).toBe("h2");
+    expect(updated.id).toBe(p.id);
+    expect(updated.engine).toBe("postgres");
+    expect(await store.getSecret(p.id)).toBe("pw");
+  });
+
+  it("replaces the secret when a new one is provided", async () => {
+    const store = makeStore();
+    const p = await store.add({ name: "a", engine: "postgres" }, "old");
+    await store.update(p.id, { name: "a2" }, "new");
+    expect(await store.getSecret(p.id)).toBe("new");
+  });
+
+  it("clears the secret when passed null", async () => {
+    const store = makeStore();
+    const p = await store.add({ name: "a", engine: "postgres" }, "pw");
+    await store.update(p.id, {}, null);
+    expect(await store.getSecret(p.id)).toBeUndefined();
+  });
+
+  it("ignores any engine field in the patch", async () => {
+    const store = makeStore();
+    const p = await store.add({ name: "a", engine: "postgres" });
+    const u = await store.update(p.id, { name: "b" } as never);
+    expect(u.engine).toBe("postgres");
+  });
+
+  it("throws when updating a missing id", async () => {
+    const store = makeStore();
+    await expect(store.update("nope", { name: "x" })).rejects.toThrow();
+  });
 });

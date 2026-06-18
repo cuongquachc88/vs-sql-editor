@@ -28,6 +28,26 @@ export class ConnectionStore {
     return full;
   }
 
+  // engine is intentionally immutable on update — changing the driver is a different
+  // operation (duplicate as new). Pass secret to set/replace the stored secret,
+  // pass null to delete it, omit (undefined) to leave it alone.
+  async update(
+    id: string,
+    patch: Partial<Omit<ConnectionProfile, "id" | "engine">>,
+    secret?: string | null,
+  ): Promise<ConnectionProfile> {
+    const all = this.list();
+    const idx = all.findIndex((p) => p.id === id);
+    if (idx < 0) throw new Error(`Unknown connection: ${id}`);
+    const merged: ConnectionProfile = { ...all[idx], ...patch, id, engine: all[idx].engine };
+    const next = [...all];
+    next[idx] = merged;
+    await this.state.update(KEY, next);
+    if (secret === null) await this.secrets.delete(secretKey(id));
+    else if (typeof secret === "string") await this.secrets.store(secretKey(id), secret);
+    return merged;
+  }
+
   async remove(id: string): Promise<void> {
     await this.state.update(
       KEY,
