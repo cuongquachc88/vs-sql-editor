@@ -9,11 +9,13 @@ const MODEL: SchemaModel = {
       schemas: [
         {
           name: "public",
+          functions: [],
           tables: [
             {
               name: "users",
               isView: false,
               primaryKey: ["id"],
+              foreignKeys: [],
               columns: [
                 { name: "id", type: "int4" },
                 { name: "email", type: "text" },
@@ -23,6 +25,7 @@ const MODEL: SchemaModel = {
               name: "orders",
               isView: false,
               primaryKey: ["id"],
+              foreignKeys: [],
               columns: [
                 { name: "id", type: "int4" },
                 { name: "user_id", type: "int4" },
