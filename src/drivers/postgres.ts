@@ -1,6 +1,7 @@
 import { Client } from "pg";
 import { applySelectPaging } from "./paging";
 import { introspectPostgresLike } from "./introspect-pg";
+import { pgTypeName } from "./pg-oids";
 import { buildUpdate, quoteDoubleQuote } from "../edit/sql";
 import {
   DriverError,
@@ -55,8 +56,12 @@ export class PostgresDriver implements DatabaseDriver {
     const paged = applySelectPaging(sql, page, pageSize);
     try {
       const res = await client.query({ text: paged, rowMode: "array" });
-      const columns = res.fields.map((f) => ({ name: f.name, type: String(f.dataTypeID) }));
-      const rows = res.rows as unknown[][];
+      // DDL/DML without RETURNING produces no fields/rows — guard both.
+      const columns = (res.fields ?? []).map((f) => ({
+        name: f.name,
+        type: pgTypeName(f.dataTypeID),
+      }));
+      const rows = (res.rows ?? []) as unknown[][];
       return {
         columns,
         rows,

@@ -53,6 +53,15 @@ describe("PgliteDriver", () => {
     expect(rs.rows).toEqual([[7], [8]]);
   });
 
+  it("returns the public schema for an empty database (no user tables)", async () => {
+    session = await driver.connect({ id: "m", name: "mem", engine: "pglite" });
+    const model = await driver.introspect(session);
+    expect(model.databases).toHaveLength(1);
+    const pub = model.databases[0].schemas.find((s) => s.name === "public");
+    expect(pub).toBeDefined();
+    expect(pub!.tables).toEqual([]);
+  });
+
   it("introspects schemas, tables, columns and primary keys", async () => {
     session = await driver.connect({ id: "m", name: "mem", engine: "pglite" });
     await driver.query(session, "create table person (id int primary key, name text)");
@@ -66,6 +75,24 @@ describe("PgliteDriver", () => {
     expect(person.isView).toBe(false);
     const view = publicSchema!.tables.find((t) => t.name === "person_v")!;
     expect(view.isView).toBe(true);
+  });
+
+  it("introspects foreign keys (composite)", async () => {
+    session = await driver.connect({ id: "m", name: "mem", engine: "pglite" });
+    await driver.query(session, "create table country (code text primary key, name text)");
+    await driver.query(
+      session,
+      "create table city (id int primary key, country_code text references country(code), name text)",
+    );
+    const model = await driver.introspect(session);
+    const pub = model.databases[0].schemas.find((s) => s.name === "public")!;
+    const city = pub.tables.find((t) => t.name === "city")!;
+    expect(city.foreignKeys).toHaveLength(1);
+    expect(city.foreignKeys[0]).toMatchObject({
+      columns: ["country_code"],
+      refTable: "country",
+      refColumns: ["code"],
+    });
   });
 
   it("buildEditStatement produces an UPDATE that actually applies", async () => {

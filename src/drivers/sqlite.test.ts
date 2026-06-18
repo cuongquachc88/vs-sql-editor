@@ -56,4 +56,21 @@ describe("SqliteDriver", () => {
     expect(person.primaryKey).toEqual(["id"]);
     expect(main.tables.find((t) => t.name === "person_v")!.isView).toBe(true);
   });
+
+  it("introspects foreign keys", async () => {
+    session = await driver.connect({ id: "m", name: "mem", engine: "sqlite" });
+    await driver.query(session, "create table country (code text primary key, name text)");
+    await driver.query(
+      session,
+      "create table city (id integer primary key, country_code text references country(code), name text)",
+    );
+    const model = await driver.introspect(session);
+    const city = model.databases[0].schemas[0].tables.find((t) => t.name === "city")!;
+    expect(city.foreignKeys).toHaveLength(1);
+    expect(city.foreignKeys[0]).toMatchObject({
+      columns: ["country_code"],
+      refTable: "country",
+      refColumns: ["code"],
+    });
+  });
 });

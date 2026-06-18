@@ -12,6 +12,7 @@ import {
   type ResultSet,
   type SchemaModel,
   type Session,
+  type ForeignKey,
   type TableInfo,
 } from "./types";
 
@@ -74,7 +75,8 @@ export class SqliteDriver implements DatabaseDriver {
       const tables: TableInfo[] = [];
       if (objs.length > 0) {
         for (const [name, type] of objs[0].values as [string, string][]) {
-          const info = db.exec(`pragma table_info("${name.replace(/"/g, '""')}")`);
+          const quoted = name.replace(/"/g, '""');
+          const info = db.exec(`pragma table_info("${quoted}")`);
           const columns: ColumnMeta[] = [];
           const primaryKey: string[] = [];
           if (info.length > 0) {
@@ -85,10 +87,38 @@ export class SqliteDriver implements DatabaseDriver {
               if (Number(row[5]) > 0) primaryKey.push(colName);
             }
           }
-          tables.push({ name, isView: type === "view", columns, primaryKey });
+          // pragma foreign_key_list columns: id, seq, table, from, to, on_update, on_delete, match
+          const fkInfo = db.exec(`pragma foreign_key_list("${quoted}")`);
+          const foreignKeys: ForeignKey[] = [];
+          if (fkInfo.length > 0) {
+            const grouped = new Map<number, { refTable: string; cols: string[]; refs: string[] }>();
+            for (const row of fkInfo[0].values) {
+              const id = Number(row[0]);
+              const seq = Number(row[1]);
+              const refTable = String(row[2]);
+              const from = String(row[3]);
+              const to = String(row[4] ?? "");
+              const entry = grouped.get(id) ?? { refTable, cols: [], refs: [] };
+              entry.cols[seq] = from;
+              entry.refs[seq] = to;
+              grouped.set(id, entry);
+            }
+            for (const { refTable, cols, refs } of grouped.values()) {
+              foreignKeys.push({
+                columns: cols.filter(Boolean),
+                refTable,
+                refColumns: refs.filter(Boolean),
+              });
+            }
+          }
+          tables.push({ name, isView: type === "view", columns, primaryKey, foreignKeys });
         }
       }
-      return { databases: [{ name: "main", schemas: [{ name: "main", tables }] }] };
+      return {
+        databases: [
+          { name: "main", schemas: [{ name: "main", tables, functions: [] }] },
+        ],
+      };
     } catch (err) {
       throw new DriverError("QUERY_FAILED", (err as Error).message, (err as Error).stack);
     }

@@ -10,6 +10,7 @@ import {
   type ResultSet,
   type SchemaModel,
   type Session,
+  type ForeignKey,
   type TableInfo,
 } from "./types";
 
@@ -95,11 +96,51 @@ export class MysqlDriver implements DatabaseDriver {
         [databaseName],
       );
 
+      const [fkRows] = await conn.query(
+        `select table_name as t, column_name as col,
+                referenced_table_schema as rs, referenced_table_name as rt, referenced_column_name as rc,
+                constraint_name as cn, ordinal_position as op
+         from information_schema.key_column_usage
+         where table_schema = ? and referenced_table_name is not null
+         order by t, cn, op`,
+        [databaseName],
+      );
+
       const pkByTable = new Map<string, string[]>();
       for (const r of pkRows as { t: string; col: string }[]) {
         const list = pkByTable.get(r.t) ?? [];
         list.push(r.col);
         pkByTable.set(r.t, list);
+      }
+
+      // Group FK rows by (table, constraint).
+      const fksByTable = new Map<string, ForeignKey[]>();
+      type FkR = {
+        t: string;
+        col: string;
+        rs: string | null;
+        rt: string;
+        rc: string;
+        cn: string;
+        op: number;
+      };
+      const byConstraint = new Map<string, { row: FkR; cols: string[]; refs: string[] }>();
+      for (const r of fkRows as FkR[]) {
+        const key = `${r.t}.${r.cn}`;
+        const entry = byConstraint.get(key) ?? { row: r, cols: [], refs: [] };
+        entry.cols[r.op - 1] = r.col;
+        entry.refs[r.op - 1] = r.rc;
+        byConstraint.set(key, entry);
+      }
+      for (const { row, cols, refs } of byConstraint.values()) {
+        const list = fksByTable.get(row.t) ?? [];
+        list.push({
+          columns: cols.filter(Boolean),
+          refSchema: row.rs && row.rs !== databaseName ? row.rs : undefined,
+          refTable: row.rt,
+          refColumns: refs.filter(Boolean),
+        });
+        fksByTable.set(row.t, list);
       }
 
       const tableMap = new Map<string, TableInfo>();
@@ -111,14 +152,41 @@ export class MysqlDriver implements DatabaseDriver {
             isView: /view/i.test(r.tt),
             columns: [],
             primaryKey: pkByTable.get(r.t) ?? [],
+            foreignKeys: fksByTable.get(r.t) ?? [],
           } satisfies TableInfo);
         tableMap.set(r.t, table);
         table.columns.push({ name: r.col, type: r.dt });
       }
 
+      // User-defined functions / procedures in the current database.
+      const [fnRows] = await conn
+        .query(
+          `select routine_name as n, routine_type as t, data_type as dt
+             from information_schema.routines
+            where routine_schema = ?`,
+          [databaseName],
+        )
+        .catch(() => [[]] as never);
+      const functions = (fnRows as { n: string; t: string; dt: string | null }[]).map(
+        (r) => ({
+          name: r.n,
+          kind: r.t === "PROCEDURE" ? ("procedure" as const) : ("function" as const),
+          returnType: r.dt ?? undefined,
+        }),
+      );
+
       return {
         databases: [
-          { name: databaseName, schemas: [{ name: databaseName, tables: [...tableMap.values()] }] },
+          {
+            name: databaseName,
+            schemas: [
+              {
+                name: databaseName,
+                tables: [...tableMap.values()],
+                functions,
+              },
+            ],
+          },
         ],
       };
     } catch (err) {

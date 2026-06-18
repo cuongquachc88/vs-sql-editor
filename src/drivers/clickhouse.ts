@@ -103,6 +103,7 @@ export class ClickhouseDriver implements DatabaseDriver {
             isView: /view/i.test(r.engine),
             columns: [],
             primaryKey: [],
+            foreignKeys: [],
           } satisfies TableInfo);
         tableMap.set(r.t, table);
         table.columns.push({ name: r.col, type: r.dt });
@@ -110,7 +111,12 @@ export class ClickhouseDriver implements DatabaseDriver {
 
       return {
         databases: [
-          { name: databaseName, schemas: [{ name: databaseName, tables: [...tableMap.values()] }] },
+          {
+            name: databaseName,
+            schemas: [
+              { name: databaseName, tables: [...tableMap.values()], functions: [] },
+            ],
+          },
         ],
       };
     } catch (err) {

@@ -45,16 +45,32 @@ export interface QueryOptions {
   signal?: AbortSignal;
 }
 
+export interface ForeignKey {
+  columns: string[];        // local columns (composite)
+  refSchema?: string;       // omitted when same schema as the table
+  refTable: string;
+  refColumns: string[];     // matching columns in the referenced table
+}
+
 export interface TableInfo {
   name: string;
   isView: boolean;
   columns: ColumnMeta[];
   primaryKey: string[];
+  foreignKeys: ForeignKey[];
+}
+
+export interface FunctionInfo {
+  name: string;
+  kind: "function" | "procedure"; // distinguish stored proc from function
+  returnType?: string;
+  arguments?: string; // raw "a int, b text" — for tooltip / quick view
 }
 
 export interface SchemaInfo {
   name: string;
   tables: TableInfo[];
+  functions: FunctionInfo[];
 }
 
 export interface DatabaseInfo {
