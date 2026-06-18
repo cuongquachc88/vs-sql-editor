@@ -6,9 +6,15 @@ export interface EditMeta {
   pkColumns: string[]; // primary key column names (used to target a row)
 }
 
+export interface ResultMeta {
+  executionMs: number;
+  // Display label for the connection used (shown in the results status bar).
+  connectionLabel?: string;
+}
+
 // Host -> Webview
 export type HostMessage =
-  | { type: "result"; data: ResultSet; edit?: EditMeta }
+  | { type: "result"; data: ResultSet; edit?: EditMeta; meta?: ResultMeta }
   | { type: "error"; message: string; detail?: string }
   | { type: "loading"; sql: string };
 

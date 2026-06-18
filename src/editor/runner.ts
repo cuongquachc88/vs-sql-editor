@@ -18,25 +18,56 @@ export interface RunContext {
   panel: ResultsPanel;
   // When set, the result rows map to this table and the grid allows inline edits.
   edit?: EditMeta;
+  // Optional display label shown in the results status bar (e.g. profile name).
+  connectionLabel?: string;
+  // Optional hook fired after each query attempt (success or failure). Used to
+  // populate the welcome panel's recent-queries list.
+  onQueryCompleted?: (info: { sql: string; ok: boolean }) => void;
+  // Optional hook fired when a query fails, with the error message. Used by
+  // the AI "Suggest fix" feature.
+  onQueryError?: (info: { sql: string; errorMessage: string }) => void;
 }
 
 // Runs `sql`, drives the panel, and wires paging + export + inline edit for this result.
 export async function runAndShow(ctx: RunContext, sql: string): Promise<void> {
-  const { manager, profileId, pageSize, panel, edit } = ctx;
+  const {
+    manager,
+    profileId,
+    pageSize,
+    panel,
+    edit,
+    connectionLabel,
+    onQueryCompleted,
+    onQueryError,
+  } = ctx;
   let currentPage = 0;
+  let recordedOnce = false;
 
   const runPage = async (page: number): Promise<ResultSet | undefined> => {
     try {
       panel.post({ type: "loading", sql });
       const session = await manager.get(profileId);
       const driver = manager.driverOf(profileId)!;
+      const start = performance.now();
       const rs = await driver.query(session, sql, { page, pageSize });
+      const executionMs = Math.round(performance.now() - start);
       currentPage = page;
-      panel.post({ type: "result", data: rs, edit });
+      panel.post({ type: "result", data: rs, edit, meta: { executionMs, connectionLabel } });
+      // Only record the user-facing query once per runAndShow invocation, not
+      // on every pagination call.
+      if (!recordedOnce) {
+        recordedOnce = true;
+        onQueryCompleted?.({ sql, ok: true });
+      }
       return rs;
     } catch (err) {
       const e = DriverError.from(err);
       panel.post({ type: "error", message: e.message, detail: e.detail });
+      if (!recordedOnce) {
+        recordedOnce = true;
+        onQueryCompleted?.({ sql, ok: false });
+        onQueryError?.({ sql, errorMessage: e.message });
+      }
       return undefined;
     }
   };
