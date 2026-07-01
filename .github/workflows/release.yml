@@ -26,15 +26,16 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Package extension
-        run: mkdir -p out && npm run package
-        # produces out/vs-sql-editor.vsix
-
       - name: Get version from tag
         id: version
         env:
           TAG: ${{ github.ref_name }}
         run: echo "VERSION=${TAG#release-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Package extension
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: mkdir -p out && npx vsce package --out "out/vs-sql-editor-${VERSION}.vsix"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -42,14 +43,15 @@ jobs:
           name: "v${{ steps.version.outputs.VERSION }}"
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: out/vs-sql-editor.vsix
+          files: out/vs-sql-editor-${{ steps.version.outputs.VERSION }}.vsix
 
       - name: Publish to VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           if [ -n "$VSCE_PAT" ]; then
-            npx vsce publish --packagePath out/vs-sql-editor.vsix
+            npx vsce publish --packagePath "out/vs-sql-editor-${VERSION}.vsix"
           else
             echo "VSCE_PAT not set — skipping marketplace publish"
           fi
