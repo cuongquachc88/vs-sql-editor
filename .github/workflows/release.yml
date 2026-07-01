@@ -35,7 +35,10 @@ jobs:
       - name: Package extension
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
-        run: mkdir -p out && npx vsce package --out "out/vs-sql-editor-${VERSION}.vsix"
+        run: |
+          mkdir -p out
+          npm version "$VERSION" --no-git-tag-version
+          npx vsce package --out "out/vs-sql-editor-${VERSION}.vsix"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
