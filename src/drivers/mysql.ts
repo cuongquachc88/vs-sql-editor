@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { createConnection, type Connection, type FieldPacket } from "mysql2/promise";
 import { applySelectPaging } from "./paging";
 import { buildUpdate, quoteBacktick } from "../edit/sql";
@@ -28,12 +29,14 @@ export class MysqlDriver implements DatabaseDriver {
 
   async connect(profile: ConnectionProfile, secret?: string): Promise<MysqlSession> {
     try {
+      const ssl = await buildMysqlSsl(profile);
       const conn = await createConnection({
         host: profile.host,
         port: profile.port,
         user: profile.user,
         password: secret,
         database: profile.database,
+        ssl,
       });
       return { id: `mysql-${profile.id}-${Date.now()}`, handle: conn };
     } catch (err) {
@@ -211,4 +214,20 @@ export class MysqlDriver implements DatabaseDriver {
     const conn = (session as MysqlSession).handle;
     if (conn) await conn.end().catch(() => undefined);
   }
+}
+
+async function buildMysqlSsl(
+  profile: ConnectionProfile,
+): Promise<{ rejectUnauthorized: boolean; ca?: string } | undefined> {
+  const mode = profile.sslMode;
+  if (!mode || mode === "disable") return undefined;
+
+  const rejectUnauthorized = mode === "verify-ca" || mode === "verify-full";
+  const result: { rejectUnauthorized: boolean; ca?: string } = { rejectUnauthorized };
+
+  if (profile.sslCa && rejectUnauthorized) {
+    result.ca = await readFile(profile.sslCa, "utf8");
+  }
+
+  return result;
 }

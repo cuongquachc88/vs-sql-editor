@@ -1,21 +1,36 @@
+# Source maps (keep separate from production builds)
 dist/**/*.map
+
+# Dev tooling and config
 .claude/**
 .vscode/**
 .gitignore
 .env
 .env.*
-# Compile-time-only / dev artifacts that npm hoists into node_modules
-node_modules/@types/**
-node_modules/typescript/**
-node_modules/.bin/**
-**/*.ts
-**/*.map
-**/tsconfig*.json
-src/**
-test/**
-**/*.test.ts
+scripts/**
+docker-compose.test.yml
 esbuild.mjs
 vitest.config.ts
 tsconfig.json
+DEVELOPMENT.md
+
+# TypeScript source (compiled to dist/)
+**/*.ts
+src/**
+test/**
+
+# Dev-only node_modules
+node_modules/@types/**
+node_modules/typescript/**
+node_modules/.bin/**
+
+# ClickHouse client ships AI skill docs — not needed at runtime
+node_modules/@clickhouse/client/skills/**
+node_modules/@clickhouse/client-common/skills/**
+
+# Misc docs
 docs/**
-docker-compose.test.yml
+images/icon.svg
+
+# Build output folder
+out/**

@@ -1,8 +1,8 @@
 {
   "name": "vs-sql-editor",
   "displayName": "VS SQL Editor",
-  "description": "Connect to and edit SQL across Postgres, MySQL, PGlite, SQLite, ClickHouse",
-  "version": "0.0.1",
+  "description": "SQL client for VS Code — connect to PostgreSQL, MySQL, SQLite, PGlite & ClickHouse. Run queries, browse schema, edit rows, import CSV, visualize ERDs, and generate SQL with AI.",
+  "version": "0.1.0",
   "publisher": "cuongquachc88",
   "author": {
     "name": "cuongquachc88",
@@ -13,6 +13,27 @@
   },
   "license": "MIT",
   "qna": false,
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1a1a2e",
+    "theme": "dark"
+  },
+  "keywords": [
+    "sql",
+    "database",
+    "postgres",
+    "postgresql",
+    "mysql",
+    "sqlite",
+    "clickhouse",
+    "pglite",
+    "query",
+    "db client",
+    "schema explorer",
+    "erd",
+    "csv import",
+    "ai sql"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/cuongquachc88/vs-sql-editor.git"
@@ -29,6 +50,8 @@
     "onNotebook:vsSqlEditor.notebook"
   ],
   "categories": [
+    "Programming Languages",
+    "Data Science",
     "Other"
   ],
   "contributes": {
@@ -293,10 +316,14 @@
     "build": "node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
     "test": "vitest run",
+    "test:integration": "./scripts/test-integration.sh",
+    "test:integration:keep": "./scripts/test-integration.sh --keep",
+    "test:all": "npm test && npm run test:integration",
     "typecheck": "tsc --noEmit",
-    "package": "vsce package",
-    "install:vsix": "code --install-extension vs-sql-editor-0.0.1.vsix --force",
+    "package": "vsce package --out out/",
+    "install:vsix": "code --install-extension out/vs-sql-editor-0.1.0.vsix --force",
     "deploy": "npm run package && npm run install:vsix",
+    "publish": "vsce publish --packagePath out/vs-sql-editor-0.1.0.vsix",
     "vscode:prepublish": "node esbuild.mjs --production"
   },
   "dependencies": {

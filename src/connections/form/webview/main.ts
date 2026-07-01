@@ -17,6 +17,24 @@ let hasExistingSecret = false;
 let selectedEngine: EngineId = "postgres";
 let inFlight = false;
 
+function updateSslCaVisibility(): void {
+  const sslMode = ($("sslMode") as HTMLSelectElement).value;
+  const show = sslMode === "verify-ca" || sslMode === "verify-full";
+  $("ssl-ca-field").toggleAttribute("hidden", !show);
+
+  // For ClickHouse, suggest the right default port when SSL is toggled.
+  if (selectedEngine === "clickhouse") {
+    const portEl = $("port") as HTMLInputElement;
+    const sslOn = sslMode && sslMode !== "disable";
+    const expectedDefault = sslOn ? "8443" : "8123";
+    const otherDefault = sslOn ? "8123" : "8443";
+    // Only update if the user has not changed it from the other default.
+    if (portEl.value === otherDefault || portEl.value === "") {
+      portEl.value = expectedDefault;
+    }
+  }
+}
+
 function init(): void {
   // Engine cards
   document.querySelectorAll<HTMLElement>(".engine-card").forEach((card) => {
@@ -30,6 +48,7 @@ function init(): void {
   $("cancel").addEventListener("click", () => vscode.postMessage({ type: "cancel" }));
   $("test").addEventListener("click", () => doTest());
   $("add-opt").addEventListener("click", () => addOptRow("", ""));
+  $("sslMode").addEventListener("change", () => updateSslCaVisibility());
   $("form").addEventListener("submit", (e) => {
     e.preventDefault();
     doSave();
@@ -82,6 +101,11 @@ function populate(p: FormProfile | undefined): void {
     mode === "edit" && hasExistingSecret
       ? "(unchanged — type to replace, leave blank to keep)"
       : "";
+
+  // SSL
+  ($("sslMode") as HTMLSelectElement).value = p?.sslMode ?? "";
+  ($("sslCa") as HTMLInputElement).value = p?.sslCa ?? "";
+  updateSslCaVisibility();
 
   // Options
   $("opts").innerHTML = "";
@@ -178,6 +202,11 @@ function readForm(): FormProfile {
     if (portRaw && Number.isFinite(port)) profile.port = port;
     if (database) profile.database = database;
     if (user) profile.user = user;
+
+    const sslMode = ($("sslMode") as HTMLSelectElement).value;
+    if (sslMode) profile.sslMode = sslMode as FormProfile["sslMode"];
+    const sslCa = ($("sslCa") as HTMLInputElement).value.trim();
+    if (sslCa) profile.sslCa = sslCa;
   }
   const opts = readOptions();
   if (opts) profile.options = opts;

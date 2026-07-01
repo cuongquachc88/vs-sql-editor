@@ -160,6 +160,8 @@ export class ConnectionFormPanel {
           database: profile.database,
           user: profile.user,
           filePath: profile.filePath,
+          sslMode: profile.sslMode,
+          sslCa: profile.sslCa,
           options: profile.options,
         },
         secretArg,
@@ -403,6 +405,27 @@ details.advanced .advanced-body {
                   <input id="password" type="password" />
                 </div>
               </div>
+
+              <details class="advanced" id="ssl-section" data-group="net">
+                <summary>SSL / TLS</summary>
+                <div class="advanced-body">
+                  <div class="field">
+                    <label for="sslMode">SSL Mode</label>
+                    <select id="sslMode">
+                      <option value="">Default (prefer)</option>
+                      <option value="disable">Disable</option>
+                      <option value="require">Require (no cert check)</option>
+                      <option value="verify-ca">Verify CA</option>
+                      <option value="verify-full">Verify Full</option>
+                    </select>
+                  </div>
+                  <div class="field" id="ssl-ca-field" hidden>
+                    <label for="sslCa">CA Certificate (PEM path)</label>
+                    <input id="sslCa" placeholder="/path/to/ca.pem" />
+                    <div class="field-hint">Required for verify-ca / verify-full</div>
+                  </div>
+                </div>
+              </details>
 
               <details class="advanced" id="advanced">
                 <summary>Advanced</summary>

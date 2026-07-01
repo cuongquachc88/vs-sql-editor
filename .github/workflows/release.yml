@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "release-v*.*.*"
+
+permissions:
+  contents: write   # needed to create GitHub Release + upload assets
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Package extension
+        run: npm run package
+        # produces out/vs-sql-editor-<version>.vsix
+
+      - name: Get version from tag
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: echo "VERSION=${TAG#release-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "v${{ steps.version.outputs.VERSION }}"
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: out/vs-sql-editor-${{ steps.version.outputs.VERSION }}.vsix
+
+      - name: Publish to VS Code Marketplace
+        if: ${{ secrets.VSCE_PAT != '' }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSIX: out/vs-sql-editor-${{ steps.version.outputs.VERSION }}.vsix
+        run: npx vsce publish --packagePath "$VSIX"

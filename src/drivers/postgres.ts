@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { Client } from "pg";
 import { applySelectPaging } from "./paging";
 import { introspectPostgresLike } from "./introspect-pg";
@@ -27,12 +28,14 @@ export class PostgresDriver implements DatabaseDriver {
   };
 
   async connect(profile: ConnectionProfile, secret?: string): Promise<PgSession> {
+    const ssl = await buildPgSsl(profile);
     const client = new Client({
       host: profile.host,
       port: profile.port,
       database: profile.database,
       user: profile.user,
       password: secret,
+      ssl,
     });
     try {
       await client.connect();
@@ -107,4 +110,26 @@ export class PostgresDriver implements DatabaseDriver {
     const client = (session as PgSession).handle;
     if (client) await client.end().catch(() => undefined);
   }
+}
+
+// Build the `ssl` option for node-postgres from the connection profile.
+// - undefined (no sslMode): pass no ssl option — node-postgres default (no TLS)
+// - "disable": pass ssl=false explicitly
+// - "require": TLS required, no cert check
+// - "verify-ca" / "verify-full": TLS + CA verification
+async function buildPgSsl(
+  profile: ConnectionProfile,
+): Promise<false | { rejectUnauthorized: boolean; ca?: string } | undefined> {
+  const mode = profile.sslMode;
+  if (!mode) return undefined;
+  if (mode === "disable") return false;
+
+  const rejectUnauthorized = mode === "verify-ca" || mode === "verify-full";
+  const result: { rejectUnauthorized: boolean; ca?: string } = { rejectUnauthorized };
+
+  if (profile.sslCa && rejectUnauthorized) {
+    result.ca = await readFile(profile.sslCa, "utf8");
+  }
+
+  return result;
 }

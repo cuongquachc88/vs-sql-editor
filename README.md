@@ -1,114 +1,100 @@
-# vs-sql-editor
+# VS SQL Editor
 
-A VS Code extension to connect to and edit SQL across **PostgreSQL, MySQL, PGlite,
-SQLite, and ClickHouse** — using VS Code's native editor as the SQL surface.
+A full-featured SQL client built into VS Code — connect to **PostgreSQL, MySQL, SQLite, PGlite, and ClickHouse**, run queries, browse your schema, edit rows inline, import CSV files, and generate SQL with AI.
 
-> **Status:** Phases 1–5 complete. All five engines (PostgreSQL, MySQL, SQLite, PGlite,
-> ClickHouse) can connect → run → page results → export CSV/JSON, with a schema explorer
-> tree, schema-aware autocomplete, and inline result editing (where the engine and a
-> primary key allow it). See the plans under `docs/superpowers/plans/`.
+## Features
 
-## Install
+### Multi-engine database connections
+Connect to any supported engine with a single form. Passwords are stored in VS Code's OS keychain (SecretStorage) — never in plain text.
 
-**From a packaged `.vsix` (recommended):**
+| Engine | Notes |
+|--------|-------|
+| **PostgreSQL** | Full SSL/TLS support (disable / require / verify-ca / verify-full) |
+| **MySQL** | SSL support, row editing |
+| **SQLite** | Local `.db` / `.sqlite` file |
+| **PGlite** | In-process Postgres (WASM) — no server required |
+| **ClickHouse** | HTTP/HTTPS, `http://` and `https://` auto-selects port |
 
-1. Download `vs-sql-editor-<version>.vsix` from the
-   [GitHub Releases](https://github.com/cuongquachc88/vs-sql-editor/releases) page.
-2. Install it:
-   ```powershell
-   code --install-extension vs-sql-editor-0.0.1.vsix
-   ```
-   Or in VS Code: **Ctrl+Shift+P → Extensions: Install from VSIX…** and pick the file.
-3. Reload VS Code.
+### Query editor
+- Run queries with **F5** or **Cmd+Enter** — works on the full file or just your selection
+- **Multi-statement** support: split on `;` and run each statement independently
+- **Schema-aware autocomplete** — tables, columns, and aliases as you type
+- **AI — Ask in plain English**: describe what you want, get SQL inserted at your cursor
+- **AI — Explain Query**: get a natural-language explanation of any SQL
+- **AI — Suggest Fix**: automatically suggests a fix when a query fails
 
-**Build and install from source:**
+### Results grid
+- Paginated results with **Prev / Next** page controls
+- **Type chips** on every column header (int4, text, timestamptz…)
+- **NULL pill** — visually distinct from empty strings
+- **Find / filter** within the current page
+- **Export CSV or JSON** from any result
 
-```powershell
-git clone https://github.com/cuongquachc88/vs-sql-editor.git
-cd vs-sql-editor
-npm install
-npx @vscode/vsce package
-code --install-extension vs-sql-editor-0.0.1.vsix
-```
+### Inline row editing
+When you preview a table that has a primary key (PostgreSQL, MySQL, SQLite), cells become editable. Edit a value, click away, review the generated `UPDATE` statement, and confirm to apply.
 
-## Architecture
+### Schema explorer
+Browse databases → schemas → tables → columns in the sidebar. Click any table to preview its first page of data.
 
-The extension host (Node) owns all database connections behind a single
-`DatabaseDriver` interface; a sandboxed webview renders the results grid and talks to
-the host only via typed `postMessage`. See
-`docs/superpowers/specs/2026-06-10-vs-sql-editor-design.md` for the full design.
+### ERD Diagram
+Visualize your schema as an entity-relationship diagram with draggable nodes and foreign-key lines.
 
-```
-src/
-  drivers/        DatabaseDriver interface, registry, per-engine drivers (Postgres now)
-  connections/    profile + secret storage, live session manager
-  results/        webview host + protocol + grid UI
-  editor/         run-query logic, export wiring
-  export/         CSV / JSON serializers
-  extension.ts    activate(): commands, status bar, CodeLens
-```
+### CSV Import
+Drop a CSV file into the import panel, preview column types (auto-inferred), adjust names and types, pick a target table, and import — creates the table if it doesn't exist.
 
-## Develop
+### SQL Notebook
+Use `.sqlnb` files as literate SQL notebooks — cells run against your active connection, results render inline.
 
-```bash
-npm install
-npm run build        # bundles dist/extension.js + dist/webview.js
-npm test             # unit tests (vitest)
-npm run watch        # rebuild on change
-```
+### Table Designer
+Visual CREATE TABLE / ALTER TABLE editor with column types, primary keys, foreign keys, indexes, and check constraints. Generates the exact DDL diff for ALTER operations.
 
-Press **F5** in VS Code to launch the Extension Development Host.
+---
 
-### Using it
+## Getting Started
 
-1. **SQL: Add Connection** — pick an engine:
-   - **postgres / mysql / clickhouse:** host / port / database / user / password
-     (password stored in VS Code SecretStorage, OS-keychain backed).
-   - **sqlite:** path to a `.sqlite` file.
-   - **pglite:** optional data directory (blank = in-memory).
-2. Open a `.sql` file, write a query. **Autocomplete** suggests tables and columns from
-   the active connection's live schema (type `tablename.` or `alias.` for that table's
-   columns); browse the same schema in the **SQL Editor** activity-bar view and click a
-   table to preview its data.
-3. Click **▶ Run Query** (CodeLens) or run **SQL: Run Query**.
-4. Results appear in a side panel: page with **Prev/Next**, export with **CSV/JSON**.
-5. **Inline editing:** when you preview a table (from the explorer) that has a primary key
-   on an editable engine, non-key cells become editable — edit a cell, click away, review
-   the generated `UPDATE`, and confirm to apply. ClickHouse is read-only/append-oriented,
-   so editing stays off for it via `capabilities.editRows = false`.
+1. Open the **SQL Editor** panel in the activity bar (database icon).
+2. Click **Add Connection** and fill in the form for your engine.
+3. Open or create a `.sql` file.
+4. Press **F5** or **Cmd+Enter** to run.
 
-## Testing
+---
 
-SQLite and PGlite run fully in-process (WASM), so their driver tests always run with
-`npm test` — no services needed. Postgres, MySQL, and ClickHouse have integration tests
-gated on env vars; to run them:
+## AI Features
 
-```powershell
-docker compose -f docker-compose.test.yml up -d
-$env:TEST_PG_URL="postgres://postgres:test@localhost:55432/testdb"
-$env:TEST_MYSQL_URL="mysql://root:test@localhost:53306/testdb"
-$env:TEST_CLICKHOUSE_URL="http://default:@localhost:58123/default"
-npm test
-docker compose -f docker-compose.test.yml down
-```
+AI features work with:
+- **VS Code Language Model API** (e.g. GitHub Copilot) — auto-detected
+- **OpenAI-compatible API** — run **SQL: AI — Set OpenAI API Key** to configure
 
-## Development
+Set the provider in Settings → VS SQL Editor → AI Provider.
 
-See [`DEVELOPMENT.md`](DEVELOPMENT.md) for build, debug (F5), packaging, and how to add a
-new database engine.
+---
+
+## Requirements
+
+- VS Code **1.90** or later
+- Node.js is **not** required for SQLite and PGlite (both run as WASM in-process)
+- For PostgreSQL / MySQL / ClickHouse: network access to your database server
+
+---
+
+## Extension Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `vsSqlEditor.pageSize` | `500` | Rows per results page |
+| `vsSqlEditor.ai.provider` | `"auto"` | `"auto"` / `"vscode-lm"` / `"openai"` |
+| `vsSqlEditor.ai.openai.baseUrl` | `https://api.openai.com/v1` | OpenAI-compatible endpoint |
+| `vsSqlEditor.ai.openai.model` | `"gpt-4o-mini"` | Model name |
+| `vsSqlEditor.ai.inline.enabled` | `true` | Schema-aware ghost completions in SQL files |
+
+---
 
 ## Privacy
 
-VS SQL Editor collects **no data**, has **no telemetry**, and sends nothing to any
-third-party server. Connection profiles are stored locally and passwords are kept in VS
-Code's OS-keychain-backed SecretStorage. Full details: [`PRIVACY.md`](PRIVACY.md).
+VS SQL Editor collects **no data** and has **no telemetry**. The only network traffic is the database connections you explicitly configure. Passwords are stored in VS Code's OS keychain. Full details in [PRIVACY.md](PRIVACY.md).
 
-## Support
-
-Questions, bugs, or feature requests:
-[open an issue](https://github.com/cuongquachc88/vs-sql-editor/issues) or email
-[cuongquachc88@gmail.com](mailto:cuongquachc88@gmail.com).
+---
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — © cuongquachc88

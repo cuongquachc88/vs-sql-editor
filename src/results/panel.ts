@@ -55,7 +55,7 @@ export class ResultsPanel {
       if (isWebviewMessage(m)) this.onMessage?.(m);
     });
     this.panel.onDidDispose(() => {
-      ResultsPanel.current = undefined;
+      if (ResultsPanel.current === this) ResultsPanel.current = undefined;
     });
   }
 

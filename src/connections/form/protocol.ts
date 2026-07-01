@@ -1,4 +1,4 @@
-import type { EngineId } from "../../drivers/types";
+import type { EngineId, SslMode } from "../../drivers/types";
 
 export type FormMode = "add" | "edit" | "duplicate";
 
@@ -11,6 +11,8 @@ export interface FormProfile {
   database?: string;
   user?: string;
   filePath?: string;
+  sslMode?: SslMode;
+  sslCa?: string;
   options?: Record<string, string>;
 }
 

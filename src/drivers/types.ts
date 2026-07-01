@@ -7,6 +7,10 @@ export interface Capabilities {
   multipleSchemas: boolean;
 }
 
+// SSL mode mirrors libpq conventions (disable, require, verify-ca, verify-full).
+// "prefer" is omitted — most cloud services mandate require or stricter.
+export type SslMode = "disable" | "require" | "verify-ca" | "verify-full";
+
 export interface ConnectionProfile {
   id: string;
   name: string;
@@ -15,7 +19,9 @@ export interface ConnectionProfile {
   port?: number;
   database?: string;
   user?: string;
-  filePath?: string; // sqlite
+  filePath?: string; // sqlite / pglite
+  sslMode?: SslMode; // undefined = driver default (usually "prefer" for postgres)
+  sslCa?: string;   // path to PEM CA certificate (verify-ca / verify-full)
   options?: Record<string, string>;
 }
 

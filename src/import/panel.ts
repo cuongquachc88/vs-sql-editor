@@ -27,6 +27,9 @@ export class CsvImportPanel {
     onImported: () => void,
   ): CsvImportPanel {
     if (CsvImportPanel.current) {
+      // Update connection in case the user switched profiles since last open.
+      CsvImportPanel.current.profileId = profileId;
+      CsvImportPanel.current.panel.title = `Import CSV — ${store.get(profileId)?.name ?? ""}`;
       CsvImportPanel.current.panel.reveal();
       void CsvImportPanel.current.postReady();
       return CsvImportPanel.current;
@@ -47,7 +50,7 @@ export class CsvImportPanel {
     private readonly store: ConnectionStore,
     private readonly manager: ConnectionManager,
     private readonly schemaCache: SchemaCache,
-    private readonly profileId: string,
+    private profileId: string,
     private readonly onImported: () => void,
   ) {
     this.panel = vscode.window.createWebviewPanel(
@@ -120,6 +123,10 @@ export class CsvImportPanel {
     }
     if (m.type === "runImport") {
       await this.runImport(m);
+      return;
+    }
+    if (m.type === "cancel") {
+      this.panel.dispose();
       return;
     }
   }

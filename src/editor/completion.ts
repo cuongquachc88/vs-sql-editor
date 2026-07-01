@@ -14,10 +14,70 @@ export type Suggestion =
   | { kind: "keyword"; label: string };
 
 const KEYWORDS = [
-  "select", "from", "where", "join", "left join", "inner join", "group by",
-  "order by", "limit", "offset", "insert into", "update", "delete from",
-  "values", "set", "and", "or", "not", "on", "as", "distinct", "having",
-  "count", "sum", "avg", "min", "max",
+  // DML
+  "select", "select distinct", "insert into", "update", "delete from",
+  "values", "set", "returning", "on conflict", "on conflict do nothing",
+  "on conflict do update set",
+  // Clauses
+  "from", "where", "having", "group by", "order by", "limit", "offset",
+  "fetch next", "rows only",
+  // Joins
+  "join", "inner join", "left join", "left outer join", "right join",
+  "right outer join", "full join", "full outer join", "cross join",
+  "natural join", "on", "using",
+  // Logical / comparison
+  "and", "or", "not", "in", "not in", "exists", "not exists",
+  "is null", "is not null", "is true", "is false",
+  "between", "like", "ilike", "similar to",
+  // CTEs & subqueries
+  "with", "with recursive", "as",
+  // Set operations
+  "union", "union all", "intersect", "except",
+  // Window functions
+  "over", "partition by", "rows between", "range between",
+  "unbounded preceding", "current row", "unbounded following",
+  "row_number()", "rank()", "dense_rank()", "lag(", "lead(", "ntile(",
+  "first_value(", "last_value(", "nth_value(",
+  // Aggregate functions
+  "count(", "count(*)", "sum(", "avg(", "min(", "max(",
+  "string_agg(", "array_agg(", "json_agg(", "jsonb_agg(",
+  "bool_and(", "bool_or(",
+  // Scalar / string functions
+  "coalesce(", "nullif(", "greatest(", "least(",
+  "upper(", "lower(", "trim(", "ltrim(", "rtrim(",
+  "length(", "char_length(", "substr(", "substring(",
+  "replace(", "split_part(", "regexp_replace(", "regexp_match(",
+  "concat(", "format(", "lpad(", "rpad(",
+  // Numeric
+  "round(", "floor(", "ceil(", "abs(", "mod(", "power(", "sqrt(",
+  "random()", "generate_series(",
+  // Date / time
+  "now()", "current_timestamp", "current_date", "current_time",
+  "date_trunc(", "date_part(", "extract(", "age(", "to_timestamp(",
+  "to_char(", "interval",
+  // JSON (Postgres)
+  "jsonb_build_object(", "json_build_object(", "jsonb_extract_path(",
+  "jsonb_array_elements(", "json_array_elements(",
+  // Type casts
+  "cast(", "::", "::text", "::int", "::bigint", "::numeric", "::boolean",
+  "::timestamp", "::timestamptz", "::date", "::jsonb",
+  // DDL
+  "create table", "create table if not exists",
+  "create index", "create unique index", "create view", "create schema",
+  "alter table", "alter table add column", "alter table drop column",
+  "alter table rename column", "alter table alter column",
+  "drop table", "drop table if exists", "drop index", "drop view",
+  "truncate", "truncate table",
+  // Constraints
+  "primary key", "not null", "unique", "default", "references",
+  "foreign key", "check", "on delete cascade", "on delete set null",
+  // Transactions
+  "begin", "commit", "rollback", "savepoint", "release savepoint",
+  // Explain
+  "explain", "explain analyze", "explain (analyze, buffers)",
+  // Misc
+  "distinct on (", "filter (where", "case", "when", "then", "else", "end",
+  "true", "false", "null",
 ];
 
 export function buildIndex(model: SchemaModel): SchemaIndex {
@@ -57,6 +117,7 @@ export function computeCompletions(
   aliasMap: Map<string, string>,
   linePrefix: string,
 ): Suggestion[] {
+  // 1. table.column — triggered by "."
   const dot = /([a-zA-Z_]\w*)\.\s*\w*$/.exec(linePrefix);
   if (dot) {
     const ref = dot[1].toLowerCase();
@@ -70,11 +131,40 @@ export function computeCompletions(
     }));
   }
 
+  // 2. After FROM / JOIN — suggest tables only
+  if (/\b(?:from|join)\s+\w*$/i.test(linePrefix)) {
+    return index.tables.map((t) => ({
+      kind: "table",
+      label: t.name,
+      detail: `table ${t.schema}.${t.name}`,
+    }));
+  }
+
+  // 3. After SELECT / WHERE / SET / HAVING / ON — suggest columns + tables
+  if (/\b(?:select|where|set|having|on)\b.*$/i.test(linePrefix)) {
+    const out: Suggestion[] = [];
+    // columns from all tables mentioned in the query so far
+    for (const [, tableName] of aliasMap) {
+      const cols = index.columnsByTable.get(tableName.toLowerCase()) ?? [];
+      for (const c of cols) {
+        out.push({ kind: "column", label: c.name, detail: `${tableName}.${c.name} : ${c.type}` });
+      }
+    }
+    // fall back to all tables if no aliases parsed yet
+    if (out.length === 0) {
+      for (const t of index.tables) {
+        out.push({ kind: "table", label: t.name, detail: `table ${t.schema}.${t.name}` });
+      }
+    }
+    return out;
+  }
+
+  // 4. Default — keywords + tables
   const out: Suggestion[] = [];
+  for (const k of KEYWORDS) out.push({ kind: "keyword", label: k });
   for (const t of index.tables) {
     out.push({ kind: "table", label: t.name, detail: `table ${t.schema}.${t.name}` });
   }
-  for (const k of KEYWORDS) out.push({ kind: "keyword", label: k });
   return out;
 }
 

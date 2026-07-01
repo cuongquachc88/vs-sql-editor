@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { createClient, type ClickHouseClient } from "@clickhouse/client";
 import { applySelectPaging } from "./paging";
 import {
@@ -29,12 +30,17 @@ export class ClickhouseDriver implements DatabaseDriver {
 
   async connect(profile: ConnectionProfile, secret?: string): Promise<ClickhouseSession> {
     const host = profile.host ?? "localhost";
-    const port = profile.port ?? 8123;
+    const ssl = profile.sslMode && profile.sslMode !== "disable";
+    const defaultPort = ssl ? 8443 : 8123;
+    const port = profile.port ?? defaultPort;
+    const scheme = ssl ? "https" : "http";
+    const tls = ssl ? await buildClickhouseTls(profile) : undefined;
     const client = createClient({
-      url: `http://${host}:${port}`,
+      url: `${scheme}://${host}:${port}`,
       username: profile.user || "default",
       password: secret ?? "",
       database: profile.database,
+      tls,
     });
     try {
       const ping = await client.ping();
@@ -137,4 +143,20 @@ export class ClickhouseDriver implements DatabaseDriver {
     const client = (session as ClickhouseSession).handle;
     if (client) await client.close().catch(() => undefined);
   }
+}
+
+// Returns a BasicTLSOptions object only when a CA cert path is supplied.
+// For plain "require" (https without cert verification), just using https://
+// in the URL is sufficient — no extra tls config needed.
+async function buildClickhouseTls(
+  profile: ConnectionProfile,
+): Promise<{ ca_cert: Buffer } | undefined> {
+  if (
+    profile.sslCa &&
+    (profile.sslMode === "verify-ca" || profile.sslMode === "verify-full")
+  ) {
+    const ca = await readFile(profile.sslCa);
+    return { ca_cert: ca };
+  }
+  return undefined;
 }

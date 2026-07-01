@@ -90,7 +90,7 @@ function renderResult(p: NotebookResultPayload, ctx: RendererContext): HTMLEleme
   // Row-number gutter
   headRow.appendChild(th("#", true));
   for (const c of p.columns) {
-    headRow.appendChild(th(`${c.name} <span style="color:var(--vscode-descriptionForeground); font-size:10px; font-weight:500; margin-left:6px;">${escapeHtml(c.type)}</span>`));
+    headRow.appendChild(th(`${escapeHtml(c.name)} <span style="color:var(--vscode-descriptionForeground); font-size:10px; font-weight:500; margin-left:6px;">${escapeHtml(c.type)}</span>`));
   }
   head.appendChild(headRow);
   table.appendChild(head);
