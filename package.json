@@ -320,10 +320,10 @@
     "test:integration:keep": "./scripts/test-integration.sh --keep",
     "test:all": "npm test && npm run test:integration",
     "typecheck": "tsc --noEmit",
-    "package": "vsce package --out out/vs-sql-editor.vsix",
-    "install:vsix": "code --install-extension out/vs-sql-editor.vsix --force",
+    "package": "mkdir -p out && vsce package --out out/",
+    "install:vsix": "code --install-extension \"out/vs-sql-editor-$(node -p 'require(\"./package.json\").version').vsix\" --force",
     "deploy": "npm run package && npm run install:vsix",
-    "publish": "vsce publish --packagePath out/vs-sql-editor.vsix",
+    "publish": "vsce publish --packagePath \"out/vs-sql-editor-$(node -p 'require(\"./package.json\").version').vsix\"",
     "vscode:prepublish": "node esbuild.mjs --production"
   },
   "dependencies": {

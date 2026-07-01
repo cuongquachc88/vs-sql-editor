@@ -6,7 +6,7 @@ on:
       - "release-v*.*.*"
 
 permissions:
-  contents: write   # needed to create GitHub Release + upload assets
+  contents: write
 
 jobs:
   release:
@@ -32,13 +32,14 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: echo "VERSION=${TAG#release-v}" >> "$GITHUB_OUTPUT"
 
-      - name: Package extension
+      - name: Sync package.json version from tag
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
-        run: |
-          mkdir -p out
-          npm version "$VERSION" --no-git-tag-version
-          npx vsce package --out "out/vs-sql-editor-${VERSION}.vsix"
+        run: npm version "$VERSION" --no-git-tag-version
+
+      - name: Package extension
+        run: npm run package
+        # vsce names the file out/vs-sql-editor-<version>.vsix automatically
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
