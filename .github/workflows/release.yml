@@ -20,7 +20,7 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: Install all dependencies
         run: npm ci
 
       - name: Run tests
@@ -37,9 +37,16 @@ jobs:
           VERSION: ${{ steps.version.outputs.VERSION }}
         run: npm version "$VERSION" --no-git-tag-version --allow-same-version
 
+      - name: Build production bundles
+        run: node esbuild.mjs --production
+
+      - name: Prune dev dependencies
+        run: npm prune --omit=dev
+
       - name: Package extension
-        run: npm run package
-        # vsce names the file out/vs-sql-editor-<version>.vsix automatically
+        run: mkdir -p out && npx --yes @vscode/vsce package --out out/
+        # vsce skips vscode:prepublish because dist/ is already built
+        # output: out/vs-sql-editor-<version>.vsix
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
