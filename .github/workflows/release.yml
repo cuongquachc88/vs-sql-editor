@@ -45,8 +45,13 @@ jobs:
           files: out/vs-sql-editor-${{ steps.version.outputs.VERSION }}.vsix
 
       - name: Publish to VS Code Marketplace
-        if: ${{ secrets.VSCE_PAT != '' }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           VSIX: out/vs-sql-editor-${{ steps.version.outputs.VERSION }}.vsix
-        run: npx vsce publish --packagePath "$VSIX"
+        run: |
+          if [ -n "$VSCE_PAT" ]; then
+            npx vsce publish --packagePath "$VSIX"
+          else
+            echo "VSCE_PAT not set — skipping marketplace publish"
+          fi
+
