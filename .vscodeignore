@@ -19,14 +19,8 @@ DEVELOPMENT.md
 src/**
 test/**
 
-# Dev-only node_modules
-node_modules/@types/**
-node_modules/typescript/**
-node_modules/.bin/**
-
-# ClickHouse client ships AI skill docs — not needed at runtime
-node_modules/@clickhouse/client/skills/**
-node_modules/@clickhouse/client-common/skills/**
+# All node_modules — extension is fully bundled into dist/
+node_modules/**
 
 # Misc docs
 docs/**
