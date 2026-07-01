@@ -240,23 +240,33 @@ h1 { font-size: 18px; font-weight: 600; margin: 0; }
 
 .tab-bar {
   display: flex;
-  gap: var(--vsx-gap-xs);
+  gap: 2px;
   border-bottom: 1px solid var(--vsx-border);
   margin-bottom: var(--vsx-gap-md);
+  padding: 0 2px;
 }
 .tab-bar button {
   background: transparent;
   border: none;
-  padding: 8px 14px;
-  font-size: 12px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 8px 16px;
+  font-size: 12.5px;
   font-weight: 500;
   color: var(--vscode-descriptionForeground);
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  transition: color var(--vsx-transition), border-color var(--vsx-transition),
+              background-color var(--vsx-transition);
+  border-radius: var(--vsx-radius-sm) var(--vsx-radius-sm) 0 0;
+}
+.tab-bar button:hover {
+  color: var(--vscode-foreground);
+  background: var(--vsx-surface-hover);
 }
 .tab-bar button.active {
-  color: var(--vscode-foreground);
-  border-bottom-color: var(--vscode-focusBorder);
+  color: var(--vsx-accent);
+  border-bottom-color: var(--vsx-accent);
+  font-weight: 600;
 }
 
 .section { display: none; flex: 1; min-height: 0; overflow: auto; }
@@ -283,13 +293,14 @@ h1 { font-size: 18px; font-weight: 600; margin: 0; }
   border-spacing: 0;
   background: var(--vsx-surface);
   border: 1px solid var(--vsx-border);
-  border-radius: var(--vsx-radius);
+  border-radius: var(--vsx-radius-lg);
   overflow: hidden;
   font-size: 12px;
+  box-shadow: var(--vsx-shadow-sm);
 }
 .grid-table th, .grid-table td {
   text-align: left;
-  padding: 4px 6px;
+  padding: 5px 8px;
   border-bottom: 1px solid var(--vsx-border);
   vertical-align: middle;
 }
@@ -298,17 +309,18 @@ h1 { font-size: 18px; font-weight: 600; margin: 0; }
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--vscode-descriptionForeground);
-  font-weight: 600;
-  background: var(--vsx-surface-hover);
+  font-weight: 700;
+  background: var(--vsx-surface-2);
 }
 .grid-table tr:last-child td { border-bottom: none; }
+.grid-table tbody tr:hover td { background: var(--vsx-surface-hover); }
 .grid-table input[type="text"], .grid-table input[type="number"] {
   height: 24px;
   font-size: 12px;
   padding: 0 6px;
   width: 100%;
 }
-.grid-table input[type="checkbox"] { margin: 0; }
+.grid-table input[type="checkbox"] { margin: 0; accent-color: var(--vsx-accent); }
 .grid-table button {
   height: 22px;
   padding: 0 8px;
@@ -321,30 +333,40 @@ h1 { font-size: 18px; font-weight: 600; margin: 0; }
 }
 
 #preview {
-  background: var(--vsx-surface);
+  background: var(--vsx-surface-2);
   border: 1px solid var(--vsx-border);
-  border-radius: var(--vsx-radius);
-  padding: var(--vsx-gap);
+  border-radius: var(--vsx-radius-lg);
+  padding: var(--vsx-gap-md);
   font-family: var(--vscode-editor-font-family);
   font-size: 12px;
+  line-height: 1.6;
   white-space: pre-wrap;
-  max-height: 240px;
+  max-height: 320px;
   overflow: auto;
   margin: var(--vsx-gap) 0;
   color: var(--vscode-foreground);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
 }
 #status {
   margin-top: var(--vsx-gap-sm);
-  padding: var(--vsx-gap-xs) var(--vsx-gap);
+  padding: var(--vsx-gap-sm) var(--vsx-gap);
   border-radius: var(--vsx-radius);
   font-size: 12px;
   display: none;
 }
 #status.err {
   display: block;
-  background: color-mix(in srgb, var(--vsx-danger), transparent 86%);
+  background: color-mix(in srgb, var(--vsx-danger), transparent 92%);
   color: var(--vsx-danger);
-  border: 1px solid color-mix(in srgb, var(--vsx-danger), transparent 60%);
+  border: 1px solid color-mix(in srgb, var(--vsx-danger), transparent 70%);
+  border-left: 3px solid var(--vsx-danger);
+}
+#status.ok {
+  display: block;
+  background: color-mix(in srgb, var(--vsx-success), transparent 90%);
+  color: var(--vsx-success);
+  border: 1px solid color-mix(in srgb, var(--vsx-success), transparent 70%);
+  border-left: 3px solid var(--vsx-success);
 }
 
 .actions {

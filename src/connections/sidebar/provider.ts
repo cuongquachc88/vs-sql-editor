@@ -298,7 +298,10 @@ body {
   border-left: 2px solid transparent;
 }
 .conn-row:hover { background: var(--vsx-surface-hover); }
-.conn.active > .conn-row { border-left-color: var(--engine-accent, var(--vsx-success)); }
+.conn.active > .conn-row {
+  border-left-color: var(--engine-accent, var(--vsx-accent));
+  background: color-mix(in srgb, var(--engine-accent, var(--vsx-accent)), transparent 92%);
+}
 .conn-row .caret {
   font-size: 10px;
   color: var(--vscode-descriptionForeground);
@@ -423,25 +426,30 @@ body {
 #ctx-menu {
   position: fixed;
   z-index: 100;
-  background: var(--vsx-surface);
+  background: color-mix(in srgb, var(--vscode-editor-background), var(--vscode-foreground) 4%);
   border: 1px solid var(--vsx-border-strong);
-  border-radius: var(--vsx-radius);
+  border-radius: var(--vsx-radius-lg);
   padding: 4px 0;
   font-size: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.32);
+  box-shadow: var(--vsx-shadow-lg);
+  backdrop-filter: blur(12px);
   display: none;
   min-width: 200px;
 }
 #ctx-menu.show { display: block; }
 #ctx-menu .item {
-  padding: 5px 14px;
+  padding: 6px 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: background-color var(--vsx-transition);
 }
 #ctx-menu .item:hover { background: var(--vsx-surface-hover); }
-#ctx-menu .item.danger:hover { background: color-mix(in srgb, var(--vsx-danger), transparent 86%); color: var(--vsx-danger); }
+#ctx-menu .item.danger { color: var(--vsx-danger); }
+#ctx-menu .item.danger:hover {
+  background: color-mix(in srgb, var(--vsx-danger), transparent 90%);
+}
 #ctx-menu .item .ic { width: 14px; opacity: 0.7; }
 #ctx-menu .sep { height: 1px; background: var(--vsx-border); margin: 4px 0; }
 #ctx-menu .header {

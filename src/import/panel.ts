@@ -241,12 +241,30 @@ h1 {
 .drop {
   border: 2px dashed var(--vsx-border-strong);
   border-radius: var(--vsx-radius-lg);
-  padding: var(--vsx-gap-xl);
+  padding: var(--vsx-gap-2xl) var(--vsx-gap-xl);
   text-align: center;
   cursor: pointer;
+  background: var(--vsx-surface);
+  transition: background-color var(--vsx-transition), border-color var(--vsx-transition),
+              box-shadow var(--vsx-transition);
 }
-.drop.over { background: var(--vsx-surface-hover); border-color: var(--vscode-focusBorder); }
-.drop .icon { font-size: 30px; opacity: 0.5; margin-bottom: var(--vsx-gap-sm); }
+.drop:hover {
+  background: var(--vsx-surface-hover);
+  border-color: var(--vsx-accent);
+  box-shadow: 0 0 0 4px var(--vsx-accent-subtle);
+}
+.drop.over {
+  background: var(--vsx-accent-subtle);
+  border-color: var(--vsx-accent);
+  box-shadow: 0 0 0 4px var(--vsx-accent-subtle);
+}
+.drop .icon {
+  font-size: 32px;
+  margin-bottom: var(--vsx-gap-sm);
+  color: var(--vsx-accent);
+  opacity: 0.7;
+}
+.drop .label { font-size: 13.5px; font-weight: 500; }
 .drop .hint { font-size: 11px; color: var(--vscode-descriptionForeground); margin-top: var(--vsx-gap-xs); }
 
 .preview-meta {
@@ -291,15 +309,16 @@ h1 {
 #preview-grid {
   margin-top: var(--vsx-gap-md);
   border: 1px solid var(--vsx-border);
-  border-radius: var(--vsx-radius);
+  border-radius: var(--vsx-radius-lg);
   overflow: auto;
   max-height: 240px;
+  box-shadow: var(--vsx-shadow-sm);
 }
 #preview-grid table { border-collapse: collapse; font-size: 11.5px; width: 100%; }
 #preview-grid th, #preview-grid td {
   border-right: 1px solid var(--vsx-border);
   border-bottom: 1px solid var(--vsx-border);
-  padding: 3px 8px;
+  padding: 4px 10px;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -307,11 +326,16 @@ h1 {
   max-width: 200px;
 }
 #preview-grid th {
-  background: var(--vsx-surface);
-  font-weight: 600;
+  background: var(--vsx-surface-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vscode-descriptionForeground);
   position: sticky;
   top: 0;
 }
+#preview-grid tr:hover td { background: var(--vsx-surface-hover); }
 
 .actions {
   display: flex;
@@ -325,20 +349,40 @@ h1 {
 #status {
   margin-top: var(--vsx-gap-md);
   font-size: 12px;
+  padding: var(--vsx-gap-sm) var(--vsx-gap);
+  border-radius: var(--vsx-radius);
+  display: none;
 }
-#status.err { color: var(--vsx-danger); white-space: pre-wrap; }
-#status.ok { color: var(--vsx-success); }
+#status.err {
+  display: block;
+  color: var(--vsx-danger);
+  background: color-mix(in srgb, var(--vsx-danger), transparent 92%);
+  border-left: 3px solid var(--vsx-danger);
+  white-space: pre-wrap;
+}
+#status.ok {
+  display: block;
+  color: var(--vsx-success);
+  background: color-mix(in srgb, var(--vsx-success), transparent 90%);
+  border-left: 3px solid var(--vsx-success);
+}
 
 #progress-wrap {
   margin-top: var(--vsx-gap-md);
-  height: 4px;
-  background: var(--vsx-surface);
+  height: 6px;
+  background: var(--vsx-surface-2);
   border-radius: 999px;
   overflow: hidden;
   display: none;
 }
 #progress-wrap.show { display: block; }
-#progress-bar { height: 100%; background: var(--vsx-success); width: 0%; transition: width 100ms; }
+#progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--vsx-accent), #818cf8);
+  width: 0%;
+  transition: width 150ms ease;
+  border-radius: 999px;
+}
 
 [hidden] { display: none !important; }
       </style></head>
@@ -349,7 +393,7 @@ h1 {
 
           <div class="drop" id="drop">
             <div class="icon">⬇</div>
-            <div>Drop a CSV here or <u>click to browse</u></div>
+            <div class="label">Drop a CSV here or <u>click to browse</u></div>
             <div class="hint">UTF-8 · comma- or tab-delimited · first row is header</div>
           </div>
 

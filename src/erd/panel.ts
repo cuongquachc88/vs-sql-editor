@@ -143,23 +143,35 @@ body { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
   padding: var(--vsx-gap-sm) var(--vsx-gap-md);
   border-bottom: 1px solid var(--vsx-border);
   background: var(--vsx-surface);
+  box-shadow: var(--vsx-shadow-sm);
   flex-shrink: 0;
   font-size: 12px;
+  z-index: 10;
 }
 #toolbar .spacer { flex: 1; }
-#toolbar input[type="text"] { height: 26px; font-size: 12px; width: 200px; }
-#toolbar button { height: 26px; padding: 0 10px; font-size: 12px; }
-#zoom-info { color: var(--vscode-descriptionForeground); min-width: 48px; text-align: center; }
+#toolbar input[type="text"] {
+  height: 28px;
+  font-size: 12px;
+  width: 200px;
+  border-radius: var(--vsx-radius-sm);
+}
+#toolbar button { height: 28px; padding: 0 10px; font-size: 12px; border-radius: var(--vsx-radius-sm); }
+#zoom-info {
+  color: var(--vscode-descriptionForeground);
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+}
 
 #canvas-wrap {
   flex: 1;
   overflow: hidden;
   position: relative;
+  background-color: var(--vscode-editor-background);
   background-image:
-    linear-gradient(var(--vsx-border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--vsx-border) 1px, transparent 1px);
-  background-size: 28px 28px;
-  background-position: -1px -1px;
+    radial-gradient(circle, var(--vsx-border) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 #canvas {
   position: absolute;
@@ -172,30 +184,46 @@ body { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 
 .err {
   padding: var(--vsx-gap-md) var(--vsx-gap-xl);
-  color: var(--vscode-errorForeground);
+  color: var(--vsx-danger);
+  border-left: 3px solid var(--vsx-danger);
+  background: color-mix(in srgb, var(--vsx-danger), transparent 92%);
+  border-radius: var(--vsx-radius);
+  margin: var(--vsx-gap-md);
   white-space: pre-wrap;
 }
 .placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   padding: var(--vsx-gap-xl);
   color: var(--vscode-descriptionForeground);
-  font-style: italic;
+  font-size: 13px;
+  text-align: center;
 }
 
 /* SVG node styling */
 .node-bg {
   fill: var(--vsx-surface);
-  stroke: var(--vsx-border-strong);
+  stroke: var(--vsx-border);
   stroke-width: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.10));
+}
+.node-bg-selected {
+  fill: var(--vsx-surface);
+  stroke: var(--engine-accent, var(--vsx-accent));
+  stroke-width: 2;
+  filter: drop-shadow(0 4px 14px rgba(99,102,241,0.22));
 }
 .node-header {
-  fill: var(--engine-accent, var(--vsx-accent-postgres));
-  opacity: 0.95;
+  fill: var(--engine-accent, var(--vsx-accent));
 }
 .node-title {
   fill: white;
-  font-weight: 600;
-  font-size: 12.5px;
+  font-weight: 700;
+  font-size: 12px;
   pointer-events: none;
+  letter-spacing: 0.01em;
 }
 .node-col {
   fill: var(--vscode-foreground);
@@ -208,24 +236,26 @@ body { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
   font-size: 10.5px;
   pointer-events: none;
 }
-.col-row.match rect { fill: var(--vsx-surface-hover); }
+.col-row.match rect { fill: color-mix(in srgb, var(--vsx-accent), transparent 90%); }
 .col-row:hover rect { fill: var(--vsx-surface-hover); }
-.pk-glyph { fill: var(--vscode-charts-yellow, #d29922); font-size: 10px; pointer-events: none; }
+.pk-glyph { fill: #f59e0b; font-size: 10px; pointer-events: none; font-weight: 700; }
 
 .fk-line {
   fill: none;
   stroke: var(--vsx-border-strong);
-  stroke-width: 1.4;
-  opacity: 0.85;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+  opacity: 0.7;
 }
 .fk-line.highlight {
-  stroke: var(--engine-accent, var(--vsx-accent-postgres));
-  stroke-width: 2;
+  stroke: var(--engine-accent, var(--vsx-accent));
+  stroke-width: 2.5;
+  stroke-dasharray: none;
   opacity: 1;
 }
 .node-group { cursor: grab; }
 .node-group.dragging { cursor: grabbing; }
-.node-group.match .node-bg { stroke: var(--vscode-focusBorder); stroke-width: 2; }
+.node-group.match .node-bg { stroke: var(--vsx-accent); stroke-width: 2; }
       </style></head>
       <body>
         <div id="toolbar">

@@ -132,35 +132,44 @@ body {
   display: flex;
   align-items: center;
   gap: var(--vsx-gap-lg);
-  padding-bottom: var(--vsx-gap-xl);
+  padding: var(--vsx-gap-lg) var(--vsx-gap-lg) var(--vsx-gap-xl);
   border-bottom: 1px solid var(--vsx-border);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--vsx-accent), transparent 94%),
+    transparent 60%);
+  border-radius: var(--vsx-radius-xl);
+  border: 1px solid var(--vsx-border);
+  margin-bottom: var(--vsx-gap-xs);
 }
 .hero-logo {
   width: 56px;
   height: 56px;
   border-radius: var(--vsx-radius-lg);
-  background: linear-gradient(135deg, var(--vsx-accent-postgres), var(--vsx-accent-mysql));
+  background: linear-gradient(135deg, var(--vsx-accent) 0%, #818cf8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 22px;
+  font-weight: 800;
+  font-size: 18px;
   color: white;
   letter-spacing: -1px;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--vsx-accent), transparent 60%);
+  flex-shrink: 0;
 }
 .hero-text h1 {
   margin: 0;
   font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 .hero-text p {
-  margin: 4px 0 0;
+  margin: 5px 0 0;
   color: var(--vscode-descriptionForeground);
   font-size: 13px;
+  line-height: 1.6;
 }
 .hero-spacer { flex: 1; }
-.hero .primary { height: 34px; padding: 0 18px; font-weight: 500; }
+.hero .primary { height: 34px; padding: 0 20px; font-weight: 600; font-size: 13px; }
 
 /* Sections */
 .section { margin-top: var(--vsx-gap-xl); }
@@ -199,13 +208,18 @@ body {
   gap: var(--vsx-gap-sm);
   padding: var(--vsx-gap-md);
   cursor: pointer;
-  transition: border-color 100ms, background-color 100ms;
+  transition: border-color var(--vsx-transition), background-color var(--vsx-transition),
+              box-shadow var(--vsx-transition), transform var(--vsx-transition);
 }
 .conn-card:hover {
   background: var(--vsx-surface-hover);
+  border-color: var(--vsx-border-strong);
+  box-shadow: var(--vsx-shadow);
+  transform: translateY(-1px);
 }
 .conn-card.active {
   border-color: var(--engine-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--engine-accent), transparent 80%);
 }
 .conn-card .top {
   display: flex;
@@ -250,12 +264,20 @@ body {
   gap: var(--vsx-gap-xs);
   padding: var(--vsx-gap-lg);
   cursor: pointer;
-  border-style: dashed;
+  border: 1.5px dashed var(--vsx-border-strong);
+  border-radius: var(--vsx-radius-lg);
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
+  transition: background-color var(--vsx-transition), border-color var(--vsx-transition),
+              color var(--vsx-transition), box-shadow var(--vsx-transition);
 }
-.add-card:hover { background: var(--vsx-surface-hover); color: var(--vscode-foreground); }
-.add-card .plus { font-size: 22px; font-weight: 300; }
+.add-card:hover {
+  background: var(--vsx-surface-hover);
+  border-color: var(--vsx-accent);
+  color: var(--vscode-foreground);
+  box-shadow: 0 0 0 3px var(--vsx-accent-subtle);
+}
+.add-card .plus { font-size: 22px; font-weight: 300; color: var(--vsx-accent); }
 
 /* Recents */
 .recents { display: flex; flex-direction: column; gap: 2px; }
@@ -267,8 +289,10 @@ body {
   padding: var(--vsx-gap-sm) var(--vsx-gap);
   border-radius: var(--vsx-radius);
   cursor: pointer;
+  transition: background-color var(--vsx-transition);
 }
 .recent:hover { background: var(--vsx-surface-hover); }
+.recent:hover .sql { color: var(--vscode-foreground); }
 .recent .dot-ok { width: 6px; height: 6px; border-radius: 999px; background: var(--vsx-success); }
 .recent .dot-err { width: 6px; height: 6px; border-radius: 999px; background: var(--vsx-danger); }
 .recent .sql {
@@ -303,9 +327,16 @@ body {
   gap: var(--vsx-gap-xs);
   padding: var(--vsx-gap-md);
   cursor: pointer;
+  transition: background-color var(--vsx-transition), border-color var(--vsx-transition),
+              box-shadow var(--vsx-transition), transform var(--vsx-transition);
 }
-.sample-card:hover { background: var(--vsx-surface-hover); }
-.sample-card .label { font-weight: 500; font-size: 12.5px; }
+.sample-card:hover {
+  background: var(--vsx-surface-hover);
+  border-color: var(--vsx-border-strong);
+  box-shadow: var(--vsx-shadow-sm);
+  transform: translateY(-1px);
+}
+.sample-card .label { font-weight: 600; font-size: 12.5px; }
 .sample-card .descr { font-size: 11px; color: var(--vscode-descriptionForeground); }
 
 .empty {
