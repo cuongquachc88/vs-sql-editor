@@ -27,7 +27,7 @@ jobs:
         run: npm test
 
       - name: Package extension
-        run: npm run package
+        run: mkdir -p out && npm run package
         # produces out/vs-sql-editor.vsix
 
       - name: Get version from tag
