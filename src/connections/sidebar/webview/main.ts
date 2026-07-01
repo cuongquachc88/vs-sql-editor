@@ -107,6 +107,12 @@ function render(): void {
   }
   list.innerHTML = filtered.map(renderConnection).join("");
   wireConnectionEvents();
+  // Re-wire schema tree events for all open connections whose tree was inlined
+  // into the HTML by renderConnection (happens when schema is already cached).
+  for (const id of state.open) {
+    const treeEl = document.querySelector<HTMLElement>(`[data-conn-tree="${id}"]`);
+    if (treeEl && treeEl.children.length > 0) wireSchemaEvents(treeEl, id);
+  }
 }
 
 function filterConnections(conns: ConnectionSummary[], filter: string): ConnectionSummary[] {

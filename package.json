@@ -2,7 +2,7 @@
   "name": "vs-sql-editor",
   "displayName": "VS SQL Editor",
   "description": "SQL client for VS Code — connect to PostgreSQL, MySQL, SQLite, PGlite & ClickHouse. Run queries, browse schema, edit rows, import CSV, visualize ERDs, and generate SQL with AI.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "cuongquachc88",
   "author": {
     "name": "cuongquachc88",
