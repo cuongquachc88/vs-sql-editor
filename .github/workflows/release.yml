@@ -35,7 +35,7 @@ jobs:
       - name: Sync package.json version from tag
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
-        run: npm version "$VERSION" --no-git-tag-version
+        run: npm version "$VERSION" --no-git-tag-version --allow-same-version
 
       - name: Package extension
         run: npm run package
