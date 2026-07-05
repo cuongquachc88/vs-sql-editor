@@ -3,6 +3,16 @@ import { getEngineSvg } from "../../../ui/engine-icons";
 import { ENGINE_LABELS } from "../../../drivers/defaults";
 import type { ConnectionSummary, HostMessage, WebviewMessage } from "../protocol";
 
+// Inline SVG icons for the schema tree — no external assets needed.
+const iconDatabase = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="4" rx="6" ry="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 4v4c0 1.38 2.69 2.5 6 2.5S14 9.38 14 8V4" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 8v4c0 1.38 2.69 2.5 6 2.5S14 13.38 14 12V8" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>`;
+const iconSchema = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="1" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="5" y="9" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4 7v2h4M12 7v2H8" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>`;
+const iconTable = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1 5h14M5 5v10" stroke="currentColor" stroke-width="1.2"/></svg>`;
+const iconView = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 3C4 3 1 8 1 8s3 5 7 5 7-5 7-5-3-5-7-5Z" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>`;
+const iconFunction = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M3 3a2 2 0 0 1 2-2h.5v1.5H5a.5.5 0 0 0-.5.5v3L3 7.5 4.5 9v3a.5.5 0 0 0 .5.5h.5V14H5a2 2 0 0 1-2-2V9.5L1.5 7.5 3 6V3Z" fill="currentColor"/><path d="M13 3a2 2 0 0 0-2-2h-.5v1.5H11a.5.5 0 0 1 .5.5v3l1.5 1.5-1.5 1.5v3a.5.5 0 0 1-.5.5h-.5V14H11a2 2 0 0 0 2-2V9.5l1.5-2L13 6V3Z" fill="currentColor"/></svg>`;
+const iconProcedure = `<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 3h12M2 8h12M2 13h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/><circle cx="13" cy="13" r="2" fill="currentColor"/><path d="M12 12 L14 14 M14 12 L12 14" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+const iconKey = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="7" r="4" fill="none" stroke="#f59e0b" stroke-width="1.8"/><path d="M10 9l5 5" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/><path d="M13 12l-1 1" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+const iconColumn = `<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M3 4h10M3 8h10M3 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/></svg>`;
+
 interface VsCodeApi {
   postMessage(m: WebviewMessage): void;
 }
@@ -232,7 +242,7 @@ function renderDb(profileId: string, d: SchemaModel["databases"][number]): strin
   const schemas = open ? d.schemas.map((s) => renderSchemaNode(profileId, d.name, s)).join("") : "";
   return `<div class="branch lvl-db ${open ? "open" : ""}" data-path="${path}">
     <span class="caret">▸</span>
-    <span class="icon">▦</span>
+    <span class="icon">${iconDatabase}</span>
     <span class="label">${escapeHtml(d.name)}</span>
     <span class="badge">${d.schemas.length} schema${d.schemas.length === 1 ? "" : "s"}</span>
   </div>${schemas}`;
@@ -245,17 +255,22 @@ function renderSchemaNode(
 ): string {
   const path = `${profileId}|sch|${database}|${s.name}`;
   const open = state.openNodes.has(path);
-  const tables = open
-    ? s.tables.length === 0
+  const fns = s.functions ?? [];
+  const children = open
+    ? s.tables.length === 0 && fns.length === 0
       ? `<div class="branch lvl-table" style="opacity:0.6"><span class="label">(empty — no tables yet)</span></div>`
-      : s.tables.map((t) => renderTable(profileId, database, s.name, t)).join("")
+      : [
+          ...s.tables.map((t) => renderTable(profileId, database, s.name, t)),
+          ...fns.map((f) => renderFunction(f)),
+        ].join("")
     : "";
+  const totalCount = s.tables.length + fns.length;
   return `<div class="branch lvl-sch ${open ? "open" : ""}" data-path="${path}">
     <span class="caret">▸</span>
-    <span class="icon">∷</span>
+    <span class="icon">${iconSchema}</span>
     <span class="label">${escapeHtml(s.name)}</span>
-    <span class="badge">${s.tables.length}</span>
-  </div>${tables}`;
+    <span class="badge">${totalCount}</span>
+  </div>${children}`;
 }
 
 function renderTable(
@@ -277,11 +292,11 @@ function renderTable(
     ? t.columns
         .map(
           (c) =>
-            `<div class="branch lvl-col"><span class="icon">${t.primaryKey.includes(c.name) ? "🔑" : "·"}</span><span class="label">${escapeHtml(c.name)}</span><span class="badge">${escapeHtml(c.type)}</span></div>`,
+            `<div class="branch lvl-col"><span class="icon">${t.primaryKey.includes(c.name) ? iconKey : iconColumn}</span><span class="label">${escapeHtml(c.name)}</span><span class="badge">${escapeHtml(c.type)}</span></div>`,
         )
         .join("")
     : "";
-  const icon = t.isView ? "◇" : "▦";
+  const icon = t.isView ? iconView : iconTable;
   return `<div class="branch lvl-table ${open ? "open" : ""} row ${matched ? "match" : ""} ${hidden}"
        data-path="${path}"
        data-table-preview="${profileId}|${database}|${schema}|${t.name}|${t.isView ? 1 : 0}">
@@ -290,6 +305,17 @@ function renderTable(
     <span class="label">${escapeHtml(t.name)}</span>
     <span class="badge">${t.columns.length} cols</span>
   </div>${cols}`;
+}
+
+function renderFunction(f: SchemaModel["databases"][number]["schemas"][number]["functions"][number]): string {
+  const icon = f.kind === "procedure" ? iconProcedure : iconFunction;
+  const tooltip = f.arguments ? escapeHtml(`${f.name}(${f.arguments})`) : escapeHtml(f.name);
+  return `<div class="branch lvl-fn" title="${tooltip}">
+    <span class="caret" style="visibility:hidden">▸</span>
+    <span class="icon">${icon}</span>
+    <span class="label">${escapeHtml(f.name)}</span>
+    <span class="badge">${f.kind}</span>
+  </div>`;
 }
 
 function wireSchemaEvents(rootEl: HTMLElement, profileId: string): void {

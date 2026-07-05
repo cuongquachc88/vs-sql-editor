@@ -194,6 +194,11 @@ export class TableDesignerPanel {
       this.args.mode === "create"
         ? generateCreateTable(this.engine, current)
         : generateAlterTable(this.engine, this.original, current);
+    if (stmts.length === 0) {
+      return this.args.mode === "create"
+        ? "-- Add at least one column to preview the CREATE TABLE statement."
+        : "-- No changes detected.";
+    }
     return stmts.join(";\n\n") + ";";
   }
 

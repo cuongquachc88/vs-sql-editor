@@ -394,12 +394,16 @@ body {
   margin-left: var(--vsx-gap-xs);
 }
 .schema-tree .icon {
-  width: 12px;
-  display: inline-block;
-  text-align: center;
-  font-size: 10px;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   color: var(--vscode-descriptionForeground);
 }
+.schema-tree .icon svg { display: block; }
+.schema-tree .lvl-fn    { padding-left: 64px; color: var(--vscode-descriptionForeground); }
 .schema-tree .row.match .label { color: var(--vscode-editor-findMatchHighlightForeground); }
 .schema-tree .row.hidden { display: none; }
 .schema-tree .loading {

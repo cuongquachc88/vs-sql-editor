@@ -49,13 +49,21 @@ const SCHEMAS_SQL = `
     and schema_name not like 'pg_toast_temp_%'
   order by schema_name`;
 
-// User-defined functions / procedures.
+// Functions and procedures in user schemas, including extension-installed ones.
+// Uses pg_proc (not information_schema.routines) so that extension functions
+// like uuid_generate_v4 appear. Excludes aggregates (prokind='a') and internal
+// C functions that have no SQL-visible signature.
 const FUNCTIONS_SQL = `
-  select routine_schema, routine_name, routine_type, data_type
-  from information_schema.routines
-  where routine_schema not in ('pg_catalog', 'information_schema')
-    and routine_schema not like 'pg_%'
-  order by routine_schema, routine_name`;
+  select n.nspname as routine_schema,
+         p.proname as routine_name,
+         case when p.prokind = 'p' then 'PROCEDURE' else 'FUNCTION' end as routine_type,
+         pg_catalog.format_type(p.prorettype, null) as data_type
+  from pg_catalog.pg_proc p
+  join pg_catalog.pg_namespace n on n.oid = p.pronamespace
+  where n.nspname not in ('pg_catalog', 'information_schema')
+    and n.nspname not like 'pg_toast%'
+    and p.prokind in ('f', 'p', 'w')
+  order by n.nspname, p.proname`;
 
 const PK_SQL = `
   select tc.table_schema, tc.table_name, kcu.column_name

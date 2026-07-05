@@ -24,6 +24,7 @@ interface State {
   current: { row: number; col: number } | undefined;
   executionMs: number | undefined;
   connectionLabel: string | undefined;
+  lastSql: string | undefined;
 }
 
 const state: State = {
@@ -37,6 +38,7 @@ const state: State = {
   current: undefined,
   executionMs: undefined,
   connectionLabel: undefined,
+  lastSql: undefined,
 };
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -47,6 +49,7 @@ window.addEventListener("message", (e: MessageEvent<HostMessage>) => handle(e.da
 
 function handle(m: HostMessage): void {
   if (m.type === "loading") {
+    state.lastSql = m.sql;
     $("content").innerHTML = `<div class="placeholder">Running…</div>`;
     setStatus({ rows: "—", time: "—", page: "—" });
     return;
@@ -414,6 +417,22 @@ $("next").addEventListener("click", () => {
 
 $("csv").addEventListener("click", () => vscode.postMessage({ type: "export", format: "csv" }));
 $("json").addEventListener("click", () => vscode.postMessage({ type: "export", format: "json" }));
+
+// ------- row limit -------
+
+($("row-limit") as HTMLInputElement).addEventListener("change", (e) => {
+  const v = Math.max(1, Math.min(100000, Number((e.target as HTMLInputElement).value) || 500));
+  (e.target as HTMLInputElement).value = String(v);
+  vscode.postMessage({ type: "setPageSize", pageSize: v });
+});
+
+// ------- save query -------
+
+$("save-query").addEventListener("click", () => {
+  if (!state.rs) return;
+  // The current SQL is tracked via the last loading message; pass it back.
+  vscode.postMessage({ type: "saveQuery", sql: state.lastSql ?? "" });
+});
 
 // ------- keyboard nav -------
 

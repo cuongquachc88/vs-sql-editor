@@ -22,7 +22,9 @@ export type HostMessage =
 export type WebviewMessage =
   | { type: "requestPage"; page: number }
   | { type: "export"; format: "csv" | "json" }
-  | { type: "applyEdit"; pk: Record<string, unknown>; column: string; value: string };
+  | { type: "applyEdit"; pk: Record<string, unknown>; column: string; value: string }
+  | { type: "setPageSize"; pageSize: number }
+  | { type: "saveQuery"; sql: string };
 
 export function isWebviewMessage(m: unknown): m is WebviewMessage {
   if (!m || typeof m !== "object") return false;
@@ -36,5 +38,7 @@ export function isWebviewMessage(m: unknown): m is WebviewMessage {
     const e = m as { pk?: unknown; column?: unknown };
     return typeof e.column === "string" && !!e.pk && typeof e.pk === "object";
   }
+  if (t === "setPageSize") return typeof (m as { pageSize?: unknown }).pageSize === "number";
+  if (t === "saveQuery") return typeof (m as { sql?: unknown }).sql === "string";
   return false;
 }

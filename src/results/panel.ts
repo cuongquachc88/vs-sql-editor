@@ -113,6 +113,8 @@ body {
   min-width: 56px;
 }
 #page-input { width: 48px; text-align: center; }
+#row-limit { width: 64px; text-align: center; }
+label.toolbar-label { font-size: 11px; color: var(--vscode-descriptionForeground); white-space: nowrap; }
 #page-total {
   font-size: 12px;
   color: var(--vscode-descriptionForeground);
@@ -445,8 +447,13 @@ table.grid td .cell-input {
             <input id="find" type="text" placeholder="Find in results…" />
             <span id="find-count"></span>
           </div>
+          <div class="group">
+            <label class="toolbar-label" for="row-limit">Limit</label>
+            <input id="row-limit" type="number" min="1" max="100000" value="500" title="Rows per page" />
+          </div>
           <div class="spacer"></div>
           <div class="group">
+            <button id="save-query" title="Save this query">☆ Save</button>
             <button id="csv">Export CSV</button>
             <button id="json">Export JSON</button>
           </div>

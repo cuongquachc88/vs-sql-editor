@@ -336,7 +336,14 @@ body {
   box-shadow: var(--vsx-shadow-sm);
   transform: translateY(-1px);
 }
-.sample-card .label { font-weight: 600; font-size: 12.5px; }
+.sample-card .label {
+  font-weight: 600;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: var(--vsx-gap-sm);
+}
+.sample-card .label svg { flex-shrink: 0; }
 .sample-card .descr { font-size: 11px; color: var(--vscode-descriptionForeground); }
 
 .empty {

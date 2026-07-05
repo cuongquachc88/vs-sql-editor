@@ -14,6 +14,8 @@ import { qualifyTable } from "./connections/qualify";
 import { quoteIdent } from "./import/sql-types";
 import { TableDesignerPanel } from "./table-designer/panel";
 import { RecentQueries } from "./connections/recent-queries";
+import { SavedQueries } from "./connections/saved-queries";
+import { HistoryViewProvider } from "./history/provider";
 import { WelcomePanel } from "./welcome/panel";
 import { ErdPanel } from "./erd/panel";
 import { CsvImportPanel } from "./import/panel";
@@ -56,6 +58,7 @@ function activateImpl(context: vscode.ExtensionContext): void {
 
   const store = new ConnectionStore(context.globalState, context.secrets);
   const recents = new RecentQueries(context.globalState);
+  const savedQueries = new SavedQueries(context.globalState);
   const manager = new ConnectionManager(
     (engine) => createDriver(engine),
     (id) => store.getSecret(id),
@@ -531,8 +534,19 @@ function activateImpl(context: vscode.ExtensionContext): void {
                 ok,
               });
               sidebar.postLiveChanged();
+              historyPanel.refresh();
             },
             onQueryError: ({ sql, errorMessage }) => recordLastError(sql, errorMessage),
+            onSaveQuery: async ({ sql }) => {
+              const name = await vscode.window.showInputBox({
+                prompt: "Save query as…",
+                placeHolder: "My query name",
+                value: sql.split("\n")[0].replace(/^--\s*/, "").slice(0, 60) || "Untitled query",
+              });
+              if (!name) return;
+              await savedQueries.save({ name, sql, profileId: activeProfileId, profileName });
+              historyPanel.refresh();
+            },
           },
           statements[0],
         );
@@ -619,6 +633,29 @@ function activateImpl(context: vscode.ExtensionContext): void {
     })(),
   );
 
+  const historyPanel = new HistoryViewProvider(
+    recents,
+    savedQueries,
+    {
+      onOpenQuery: async (sql, profileId) => {
+        if (profileId && profileId !== activeProfileId) await setActive(profileId);
+        const doc = await vscode.workspace.openTextDocument({ language: "sql", content: sql });
+        await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+      },
+      onSaveQuery: async (_id, name, sql, profileId, profileName) => {
+        await savedQueries.save({ name, sql, profileId, profileName });
+        historyPanel.refresh();
+      },
+      onDeleteSaved: async (id) => {
+        await savedQueries.remove(id);
+      },
+      onClearHistory: async () => {
+        await recents.clear();
+        historyPanel.refresh();
+      },
+    },
+  );
+
   // Infrastructure subscriptions. Pushed separately so even if any of these
   // throw, the commands above are still registered and usable.
   context.subscriptions.push(
@@ -626,6 +663,7 @@ function activateImpl(context: vscode.ExtensionContext): void {
     completionProvider,
     notebookSerializer,
     vscode.window.registerWebviewViewProvider(ConnectionsViewProvider.viewType, sidebar),
+    vscode.window.registerWebviewViewProvider(HistoryViewProvider.viewType, historyPanel),
   );
 
   context.subscriptions.push({ dispose: () => void manager.disposeAll() });

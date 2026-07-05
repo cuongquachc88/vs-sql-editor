@@ -2,7 +2,7 @@
   "name": "vs-sql-editor",
   "displayName": "VS SQL Editor",
   "description": "SQL client for VS Code — connect to PostgreSQL, MySQL, SQLite, PGlite & ClickHouse. Run queries, browse schema, edit rows, import CSV, visualize ERDs, and generate SQL with AI.",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "cuongquachc88",
   "author": {
     "name": "cuongquachc88",
@@ -47,6 +47,7 @@
   "activationEvents": [
     "onLanguage:sql",
     "onView:vsSqlEditorConnections",
+    "onView:vsSqlEditorHistory",
     "onNotebook:vsSqlEditor.notebook"
   ],
   "categories": [
@@ -164,6 +165,12 @@
           "name": "Connections",
           "type": "webview",
           "icon": "$(database)"
+        },
+        {
+          "id": "vsSqlEditorHistory",
+          "name": "History & Saved",
+          "type": "webview",
+          "icon": "$(history)"
         }
       ]
     },
@@ -240,11 +247,26 @@
         }
       ],
       "commandPalette": [
-        { "command": "vsSqlEditor.editConnection", "when": "false" },
-        { "command": "vsSqlEditor.duplicateConnection", "when": "false" },
-        { "command": "vsSqlEditor.deleteConnection", "when": "false" },
-        { "command": "vsSqlEditor.setActiveConnection", "when": "false" },
-        { "command": "vsSqlEditor.previewTable", "when": "false" }
+        {
+          "command": "vsSqlEditor.editConnection",
+          "when": "false"
+        },
+        {
+          "command": "vsSqlEditor.duplicateConnection",
+          "when": "false"
+        },
+        {
+          "command": "vsSqlEditor.deleteConnection",
+          "when": "false"
+        },
+        {
+          "command": "vsSqlEditor.setActiveConnection",
+          "when": "false"
+        },
+        {
+          "command": "vsSqlEditor.previewTable",
+          "when": "false"
+        }
       ]
     },
     "notebooks": [
@@ -252,7 +274,9 @@
         "type": "vsSqlEditor.notebook",
         "displayName": "SQL Notebook",
         "selector": [
-          { "filenamePattern": "*.sqlnb" }
+          {
+            "filenamePattern": "*.sqlnb"
+          }
         ]
       }
     ],
@@ -290,7 +314,11 @@
         },
         "vsSqlEditor.ai.provider": {
           "type": "string",
-          "enum": ["auto", "vscode-lm", "openai"],
+          "enum": [
+            "auto",
+            "vscode-lm",
+            "openai"
+          ],
           "default": "auto",
           "description": "Which language-model backend to use. \"auto\" prefers VS Code's Language Model API (e.g. Copilot) and falls back to OpenAI when an API key is configured."
         },

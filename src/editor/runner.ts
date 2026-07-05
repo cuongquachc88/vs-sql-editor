@@ -26,6 +26,8 @@ export interface RunContext {
   // Optional hook fired when a query fails, with the error message. Used by
   // the AI "Suggest fix" feature.
   onQueryError?: (info: { sql: string; errorMessage: string }) => void;
+  // Optional hook fired when user clicks ☆ Save in the results toolbar.
+  onSaveQuery?: (info: { sql: string }) => void;
 }
 
 // Runs `sql`, drives the panel, and wires paging + export + inline edit for this result.
@@ -33,13 +35,14 @@ export async function runAndShow(ctx: RunContext, sql: string): Promise<void> {
   const {
     manager,
     profileId,
-    pageSize,
     panel,
     edit,
     connectionLabel,
     onQueryCompleted,
     onQueryError,
+    onSaveQuery,
   } = ctx;
+  let currentPageSize = ctx.pageSize;
   let currentPage = 0;
   let recordedOnce = false;
 
@@ -49,7 +52,7 @@ export async function runAndShow(ctx: RunContext, sql: string): Promise<void> {
       const session = await manager.get(profileId);
       const driver = manager.driverOf(profileId)!;
       const start = performance.now();
-      const rs = await driver.query(session, sql, { page, pageSize });
+      const rs = await driver.query(session, sql, { page, pageSize: currentPageSize });
       const executionMs = Math.round(performance.now() - start);
       currentPage = page;
       panel.post({ type: "result", data: rs, edit, meta: { executionMs, connectionLabel } });
@@ -77,6 +80,15 @@ export async function runAndShow(ctx: RunContext, sql: string): Promise<void> {
   panel.setMessageHandler(async (m) => {
     if (m.type === "requestPage") {
       last = await runPage(m.page);
+      return;
+    }
+    if (m.type === "setPageSize") {
+      currentPageSize = m.pageSize;
+      last = await runPage(0);
+      return;
+    }
+    if (m.type === "saveQuery") {
+      onSaveQuery?.({ sql: m.sql || sql });
       return;
     }
     if (m.type === "export" && last) {
